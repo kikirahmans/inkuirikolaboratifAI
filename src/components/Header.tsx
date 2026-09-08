@@ -25,6 +25,27 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="bg-white text-slate-800 no-print border-b border-slate-200 sticky top-0 z-30">
+      {/* Top Watermark Bar */}
+      <div
+        id="app-top-watermark"
+        className="bg-slate-950 text-slate-200 text-xs py-1 px-4 border-b border-slate-800 select-none"
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[11px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-slate-300 font-medium tracking-wide">
+              Sistem Refleksi Pembelajaran Guru SMK
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] font-mono">
+            <span className="text-slate-400">watermark:</span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold tracking-wider text-indigo-300 bg-indigo-950/80 border border-indigo-700/70 shadow-xs">
+              kikybahsoan
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Top Banner */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -38,6 +59,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <h1 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-slate-900">
                   RefleksiGuru
                 </h1>
+                <span className="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
+                  kikybahsoan
+                </span>
                 <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full">
                   Inkuiri Kolaboratif
                 </span>

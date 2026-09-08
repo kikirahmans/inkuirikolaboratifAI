@@ -215,7 +215,17 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col antialiased relative">
+      {/* Subtle Top Watermark Ambient */}
+      <div
+        className="pointer-events-none fixed top-20 left-0 right-0 flex justify-center items-center z-0 overflow-hidden select-none opacity-[0.03] no-print"
+        aria-hidden="true"
+      >
+        <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-widest text-slate-950 uppercase">
+          kikybahsoan
+        </span>
+      </div>
+
       {/* App Header */}
       <Header
         profile={profile}

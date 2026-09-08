@@ -175,6 +175,14 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
       {/* DOCUMENT CANVAS (Print-ready formal sheet) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 max-w-4xl mx-auto print:p-0 print:border-none print:shadow-none">
+        {/* Top Watermark for Document */}
+        <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-3 pb-1 border-b border-slate-100">
+          <span>Aplikasi Refleksi Guru SMK · Inkuiri Kolaboratif</span>
+          <span>
+            watermark: <strong className="text-slate-600 uppercase">kikybahsoan</strong>
+          </span>
+        </div>
+
         {/* Official Kop Laporan */}
         <div className="border-b-2 border-slate-900 pb-4 mb-6 text-center">
           <p className="text-xs uppercase tracking-widest font-bold text-slate-600">

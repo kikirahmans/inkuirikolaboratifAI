@@ -50,10 +50,13 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Logo & App Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-sm shadow-indigo-200 shrink-0">
-              R
-            </div>
+          <div className="flex items-center gap-3.5">
+            <img
+              src="./logo.jpg"
+              alt="Logo RefleksiGuru Kikybahsoan"
+              className="h-12 sm:h-14 w-auto object-contain rounded-lg border border-slate-200/80 shadow-xs bg-white shrink-0 p-0.5"
+              referrerPolicy="no-referrer"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-slate-900">

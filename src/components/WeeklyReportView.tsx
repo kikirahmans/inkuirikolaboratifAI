@@ -184,16 +184,27 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         </div>
 
         {/* Official Kop Laporan */}
-        <div className="border-b-2 border-slate-900 pb-4 mb-6 text-center">
-          <p className="text-xs uppercase tracking-widest font-bold text-slate-600">
-            Kementerian Pendidikan Dasar dan Menengah · Satuan Pendidikan Vokasi
-          </p>
-          <h2 className="font-heading font-extrabold text-lg sm:text-xl text-slate-900 uppercase mt-0.5">
-            {profile.sekolah}
-          </h2>
-          <p className="text-xs text-slate-600 mt-0.5">
-            Portofolio Pengelolaan Kinerja & Asesmen Inkuiri Kolaboratif Pembelajaran
-          </p>
+        <div className="border-b-2 border-slate-900 pb-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <img
+              src="./logo.jpg"
+              alt="Logo RefleksiGuru Kikybahsoan"
+              className="h-16 sm:h-20 w-auto object-contain shrink-0"
+              referrerPolicy="no-referrer"
+            />
+            <div className="flex-1 text-center">
+              <p className="text-xs uppercase tracking-widest font-bold text-slate-600">
+                Kementerian Pendidikan Dasar dan Menengah · Satuan Pendidikan Vokasi
+              </p>
+              <h2 className="font-heading font-extrabold text-lg sm:text-xl text-slate-900 uppercase mt-0.5">
+                {profile.sekolah}
+              </h2>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Portofolio Pengelolaan Kinerja & Asesmen Inkuiri Kolaboratif Pembelajaran
+              </p>
+            </div>
+            <div className="w-16 sm:w-20 hidden sm:block shrink-0" aria-hidden="true" />
+          </div>
           <div className="h-0.5 bg-slate-900 mt-3 mb-0.5" />
           <div className="h-px bg-slate-300" />
         </div>

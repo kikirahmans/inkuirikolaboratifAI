@@ -1,0 +1,6 @@
+{
+  "name": "Refleksi Guru & Evaluasi Berbasis Data",
+  "description": "Aplikasi refleksi pembelajaran guru berbasis model Inkuiri Kolaboratif dengan pelaporan mingguan, evaluasi mandiri grafik, dan analisis acuan berbasis AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

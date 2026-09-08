@@ -16,6 +16,7 @@ import {
   TeacherProfile,
   WeeklySynthesisReport,
 } from "../types";
+import { buildFallbackWeeklySynthesis } from "../utils/fallbackAnalyzer";
 
 interface WeeklyReportViewProps {
   entries: ReflectionEntry[];
@@ -50,20 +51,26 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const generateSynthesisReport = async () => {
     setIsLoadingSynthesis(true);
     try {
-      const response = await fetch("/api/reflect/weekly-synthesis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teacherProfile: profile,
-          entries,
-        }),
-      });
+      let data: any;
+      try {
+        const response = await fetch("/api/reflect/weekly-synthesis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            teacherProfile: profile,
+            entries,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Gagal menghasilkan sintesis laporan mingguan.");
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          data = buildFallbackWeeklySynthesis(profile, entries);
+        }
+      } catch {
+        data = buildFallbackWeeklySynthesis(profile, entries);
       }
 
-      const data = await response.json();
       setSynthesisReport({
         id: "synth-" + Date.now(),
         generatedAt: new Date().toISOString(),

@@ -23,6 +23,7 @@ import {
   calculateAverageRubric,
 } from "../types";
 import { SelfRubricInput } from "./SelfRubricInput";
+import { buildFallbackAnalysis } from "../utils/fallbackAnalyzer";
 
 interface ReflectionFormProps {
   profile: TeacherProfile;
@@ -164,33 +165,38 @@ export const ReflectionForm: React.FC<ReflectionFormProps> = ({
     setSuccessMessage("");
 
     try {
-      const response = await fetch("/api/reflect/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teacherProfile: profile,
-          draft,
-          selfRubricScores: draft.selfRubricScores,
-        }),
-      });
+      let result: AiFeedback;
+      try {
+        const response = await fetch("/api/reflect/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            teacherProfile: profile,
+            draft,
+            selfRubricScores: draft.selfRubricScores,
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.error || `Gagal menghubungi layanan AI (Status: ${response.status})`
-        );
+        if (response.ok) {
+          result = await response.json();
+        } else {
+          // Fallback if backend route is unavailable (e.g. static hosting on GitHub Pages)
+          result = buildFallbackAnalysis(draft, draft.selfRubricScores);
+        }
+      } catch {
+        // Fallback for network error or offline mode
+        result = buildFallbackAnalysis(draft, draft.selfRubricScores);
       }
 
-      const result: AiFeedback = await response.json();
       setDraft((prev) => ({
         ...prev,
         aiFeedback: result,
       }));
-      setSuccessMessage("Analisis AI dan acuan terstandar berhasil diperbarui!");
+      setSuccessMessage("Analisis reflektif dan acuan pedagogik berhasil diperbarui!");
     } catch (err: any) {
       console.error(err);
       setErrorMessage(
-        err.message || "Terjadi kesalahan saat memproses masukan AI."
+        err.message || "Terjadi kesalahan saat memproses masukan analisis."
       );
     } finally {
       setIsLoadingAi(false);

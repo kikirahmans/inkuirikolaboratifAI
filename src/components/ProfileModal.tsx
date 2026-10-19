@@ -95,6 +95,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
+                Inovasi Praktik Baik (TET)
+              </label>
+              <input
+                type="text"
+                value={formData.praktikBaikInovasi || ""}
+                onChange={(e) => setFormData({ ...formData, praktikBaikInovasi: e.target.value })}
+                placeholder="mis. Huyula Digital (Pembelajaran Berpikir Komputasional Papan Interaktif)"
+                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Mata Pelajaran yang Diampu
               </label>
               <input

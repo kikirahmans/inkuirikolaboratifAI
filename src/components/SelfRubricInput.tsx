@@ -13,7 +13,7 @@ export const RUBRIC_DIMENSIONS = [
     title: "1. Penguasaan Materi & Alur TP",
     subtitle: "Kedalaman penguasaan konten dan kemampuan membedah prasyarat konsep serta miskonsepsi.",
     levels: [
-      { score: 1, label: "Perlu Pendampingan", desc: "Masih kesulitan membedah urutan prasyarat konsep dan miskonsepsi dasar siswa." },
+      { score: 1, label: "Perlu Pendampingan", desc: "Masih kesulitan membedah urutan prasyarat konsep dan miskonsepsi dasar murid." },
       { score: 2, label: "Berkembang", desc: "Memahami TP secara teoritis, namun masih terkendala mengaitkannya dengan aplikasi kontekstual." },
       { score: 3, label: "Cakap", desc: "Menguasai TP secara utuh, mampu menghubungkan dengan studi kasus nyata dan mendiagnosis miskonsepsi." },
       { score: 4, label: "Mahir", desc: "Sangat menguasai konsep esensial, transfer teknologi/AI relevan, dan desain tantangan bertingkat." },
@@ -22,9 +22,9 @@ export const RUBRIC_DIMENSIONS = [
   {
     key: "diferensiasi" as keyof SelfRubricScores,
     title: "2. Diferensiasi & Akomodasi Kebutuhan Belajar",
-    subtitle: "Pemberian scaffolding dan perlakuan bagi siswa lambat belajar, reguler, maupun cepat.",
+    subtitle: "Pemberian scaffolding dan perlakuan bagi murid lambat belajar, reguler, maupun cepat.",
     levels: [
-      { score: 1, label: "Perlu Pendampingan", desc: "Pendekatan seragam satu arah tanpa penyesuaian bagi siswa dengan kecepatan belajar berbeda." },
+      { score: 1, label: "Perlu Pendampingan", desc: "Pendekatan seragam satu arah tanpa penyesuaian bagi murid dengan kecepatan belajar berbeda." },
       { score: 2, label: "Berkembang", desc: "Menyediakan variasi latihan sederhana, namun belum berbasis data pemetaan diagnostik." },
       { score: 3, label: "Cakap", desc: "Menerapkan diferensiasi proses/konten (scaffolding LKPD, bimbingan kelompok kecil terarah)." },
       { score: 4, label: "Mahir", desc: "Diferensiasi komprehensif terintegrasi penuh: intervensi tuntas, penguatan reguler, dan pengayaan inovatif." },
@@ -33,23 +33,23 @@ export const RUBRIC_DIMENSIONS = [
   {
     key: "interaktivitas" as keyof SelfRubricScores,
     title: "3. Interaktivitas & Iklim Partisipatif",
-    subtitle: "Mendorong keterlibatan aktif, kolaborasi antar siswa (peer learning), dan dinamika kelas.",
+    subtitle: "Mendorong keterlibatan aktif, kolaborasi antar murid (peer learning), dan dinamika kelas.",
     levels: [
-      { score: 1, label: "Perlu Pendampingan", desc: "Didominasi ceramah pasif, partisipasi siswa sangat minim atau enggan merespons." },
-      { score: 2, label: "Berkembang", desc: "Ada sesi tanya jawab atau diskusi, namun hanya didominasi 3-4 siswa yang aktif." },
+      { score: 1, label: "Perlu Pendampingan", desc: "Didominasi ceramah pasif, partisipasi murid sangat minim atau enggan merespons." },
+      { score: 2, label: "Berkembang", desc: "Ada sesi tanya jawab atau diskusi, namun hanya didominasi 3-4 murid yang aktif." },
       { score: 3, label: "Cakap", desc: "Menerapkan model aktif (misal: Pair Programming, PBL, simulasi) dengan partisipasi merata." },
-      { score: 4, label: "Mahir", desc: "Iklim kelas sangat memberdayakan, saling asah antar siswa, antusiasme tinggi (>85% terlibat aktif)." },
+      { score: 4, label: "Mahir", desc: "Iklim kelas sangat memberdayakan, saling asah antar murid, antusiasme tinggi (>85% terlibat aktif)." },
     ],
   },
   {
     key: "asesmenData" as keyof SelfRubricScores,
     title: "4. Analisis Data Hasil Belajar & Diagnostik",
-    subtitle: "Ketajaman memanfaatkan angka ketuntasan, analisis butir soal sukar, dan pola kesalahan siswa.",
+    subtitle: "Ketajaman memanfaatkan angka ketuntasan, analisis butir soal sukar, dan pola kesalahan murid.",
     levels: [
       { score: 1, label: "Perlu Pendampingan", desc: "Penilaian hanya berhenti pada pemberian nilai mentah tanpa analisis butir soal atau kesenjangan." },
       { score: 2, label: "Berkembang", desc: "Menghitung rata-rata dan ketuntasan, tetapi belum menelusuri akar penyebab soal sukar." },
-      { score: 3, label: "Cakap", desc: "Memetakan pola distraktor/soal sukar dan mengidentifikasi daftar siswa yang butuh penguatan KKTP." },
-      { score: 4, label: "Mahir", desc: "Menganalisis korelasi data formatif numerik dengan catatan observasi perilaku belajar siswa secara tajam." },
+      { score: 3, label: "Cakap", desc: "Memetakan pola distraktor/soal sukar dan mengidentifikasi daftar murid yang butuh penguatan KKTP." },
+      { score: 4, label: "Mahir", desc: "Menganalisis korelasi data formatif numerik dengan catatan observasi perilaku belajar murid secara tajam." },
     ],
   },
   {

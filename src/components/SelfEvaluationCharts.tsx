@@ -159,7 +159,7 @@ export const SelfEvaluationCharts: React.FC<SelfEvaluationChartsProps> = ({
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Visualisasi komparatif antara evaluasi mandiri guru, ketercapaian hasil belajar siswa, dan acuan standar AI.
+            Visualisasi komparatif antara evaluasi mandiri guru, ketercapaian hasil belajar murid, dan acuan standar AI.
           </p>
         </div>
 
@@ -188,7 +188,7 @@ export const SelfEvaluationCharts: React.FC<SelfEvaluationChartsProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Rata-rata NA Siswa</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Rata-rata NA Murid</span>
             <Target size={16} className="text-indigo-600" />
           </div>
           <div className="flex items-baseline gap-2">
@@ -209,7 +209,7 @@ export const SelfEvaluationCharts: React.FC<SelfEvaluationChartsProps> = ({
             <span className="text-2xl sm:text-3xl font-bold text-slate-900">{avgKetuntasan}%</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            Persentase siswa tuntas rata-rata
+            Persentase murid tuntas rata-rata
           </p>
         </div>
 
@@ -384,11 +384,11 @@ export const SelfEvaluationCharts: React.FC<SelfEvaluationChartsProps> = ({
             <div className="flex items-center gap-2">
               <BarChart3 size={18} className="text-indigo-600" />
               <h3 className="font-heading font-bold text-slate-900 text-sm sm:text-base">
-                Ketuntasan Siswa (%) & Tingkat Keterlibatan Kelas (%)
+                Ketuntasan Murid (%) & Tingkat Keterlibatan Kelas (%)
               </h3>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Hubungan keterlibatan interaktif siswa di kelas dengan keberhasilan ketuntasan asesmen formatif.
+              Hubungan keterlibatan interaktif murid di kelas dengan keberhasilan ketuntasan asesmen formatif.
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs">
@@ -420,13 +420,13 @@ export const SelfEvaluationCharts: React.FC<SelfEvaluationChartsProps> = ({
               <Legend wrapperStyle={{ paddingTop: "8px", fontSize: "12px" }} />
               <Bar
                 dataKey="persenTuntas"
-                name="% Ketuntasan Belajar Siswa"
+                name="% Ketuntasan Belajar Murid"
                 fill="#4f46e5"
                 radius={[6, 6, 0, 0]}
               />
               <Bar
                 dataKey="keterlibatan"
-                name="% Tingkat Keterlibatan Siswa"
+                name="% Tingkat Keterlibatan Murid"
                 fill="#0d9488"
                 radius={[6, 6, 0, 0]}
               />

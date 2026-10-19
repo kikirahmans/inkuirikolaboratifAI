@@ -6,6 +6,7 @@ export interface TeacherProfile {
   faseKelas: string;
   semester: string;
   tahunAjaran: string;
+  praktikBaikInovasi?: string; // e.g. "Huyula Digital: Pembelajaran Berpikir Komputasional Berbantuan Papan Interaktif"
 }
 
 export interface SelfRubricScores {
@@ -32,6 +33,54 @@ export interface StageAnalysis {
   indikatorAcuan: string;
 }
 
+export interface PerluBuktiItem {
+  klaim: string;
+  saranData: string;
+  kategori: "Hasil Belajar" | "Keterlibatan Murid" | "Praktik Guru" | "Keterlibatan Orang Tua" | "Proses Digital" | "Umpan Balik Sejawat";
+}
+
+export interface PerbandinganMetrik {
+  arah: "naik" | "turun" | "tetap";
+  selisih: number;
+  catatan: string;
+}
+
+export interface PerbandinganSiklus {
+  siklusPembanding: number;
+  ketuntasan: PerbandinganMetrik;
+  rataNA: PerbandinganMetrik;
+  keterlibatan: PerbandinganMetrik;
+  evaluasiDiri: PerbandinganMetrik;
+  dugaanPenyebab: string;
+}
+
+export interface PraktikBaikSTAR {
+  judul: string;
+  situasi: string;
+  tantangan: string;
+  aksi: string;
+  refleksiDampak: string;
+  tipsReplikasi: string;
+  kaitanKebijakanSekolah: string;
+}
+
+export interface ModeSejawat {
+  pertanyaanDiskusi: string[];
+  formatRingkasLisan: string;
+  catatanUmpanBalikRekan: string;
+}
+
+export interface LaporanRefleksiSiklusFormat {
+  bagianA_Identitas: string;
+  bagianB_Identifikasi: string;
+  bagianC_Desain: string;
+  bagianD_Implementasi: string;
+  bagianE_AmatiRefleksi: string;
+  bagianF_PerubahanTindakLanjut: string;
+  bagianG_BerbagiPraktik: string;
+  bagianH_CatatanData: string;
+}
+
 export interface AiFeedback {
   ringkasanDiagnostik: string;
   acuanStandar: string;
@@ -41,6 +90,7 @@ export interface AiFeedback {
     design?: StageAnalysis;
     implement?: StageAnalysis;
     measure?: StageAnalysis;
+    share?: StageAnalysis;
   };
   analisisGrafikDanData?: string;
   rekomendasiDiferensiasi?: {
@@ -49,6 +99,26 @@ export interface AiFeedback {
     pengayaanTinggi?: string;
   };
   rekomendasi_utama: string[];
+  // Fitur Baru Dokumen Acuan:
+  ringkasanPembukaSesi?: {
+    rangkumanSiklusSebelumnya: string;
+    rencanaPerubahanSebelumnya: string;
+    pertanyaanKonfirmasi: string;
+  };
+  periksaBukti?: PerluBuktiItem[];
+  perbandinganAntarSiklus?: PerbandinganSiklus;
+  modeSejawat?: ModeSejawat;
+  praktikBaikSTAR?: PraktikBaikSTAR;
+  laporanFormatTetap?: LaporanRefleksiSiklusFormat;
+}
+
+export interface BuktiDataInput {
+  hasilBelajar: string; // Nilai formatif/sumatif, persentase ketuntasan, hasil produk (infografis) [tahap 1, 4]
+  keterlibatanMurid: string; // Catatan observasi, partisipasi gim, umpan balik murid, lembar refleksi [tahap 1, 3, 4]
+  praktikGuru: string; // Catatan mengajar, supervisi, peer observation, perubahan strategi [tahap 1, 3, 4]
+  keterlibatanOrangTua: string; // Jumlah dan kualitas dokumentasi bersama ortu, kendala muncul [tahap 3, 4]
+  prosesDigital: string; // Screenshot Classroom, jejak umpan balik, log Papan Interaktif [tahap 3, 4]
+  umpanBalikSejawat: string; // Masukan KKG/MGMP, rekan, kepala sekolah [tahap 1, 4, 5]
 }
 
 export interface ReflectionEntry {
@@ -59,21 +129,38 @@ export interface ReflectionEntry {
   periode: string;
   elemenTP: string;
   rekan: string;
-  // Data kuantitatif
-  jumlahSiswa: number;
+
+  // Data kuantitatif murid
+  jumlahSiswa: number; // Jumlah murid
   rataNA: number;
   kktp: number;
   persenTuntas: number;
   keterlibatanRate: number;
   soalSukar: string;
-  // Narasi Inkuiri Kolaboratif
+
+  // 5 Tahap Siklus TET & Inkuiri Kolaboratif
+  // 1. Identifikasi (Assess)
   assess: string;
+  // 2. Desain (Design)
   design: string;
+  // 3. Implementasi (Implement)
   implement: string;
+  // 4. Amati dan Refleksi (Measure - Reflect - Change)
   measure: string;
-  // Evaluasi Mandiri
+  // 5. Berbagi Praktik Baik (Tindak Lanjut Komunitas)
+  share: string;
+
+  // 6 Kategori Bukti Data
+  buktiData?: BuktiDataInput;
+
+  // Rencana perubahan untuk siklus berikutnya
+  rencanaPerubahanBerikutnya?: string;
+  indikatorPemantauan?: string;
+
+  // Evaluasi Mandiri Guru
   selfRubricScores: SelfRubricScores;
-  // AI Feedback
+
+  // AI Feedback & Analisis
   aiFeedback: AiFeedback | null;
   status: "draft" | "final";
 }
@@ -94,6 +181,15 @@ export interface WeeklySynthesisReport {
   rekomendasiStrategis: string[];
 }
 
+export interface ChatMessage {
+  id: string;
+  sender: "ai" | "guru";
+  text: string;
+  tahapAktif?: 1 | 2 | 3 | 4 | 5;
+  timestamp: string;
+  perluBuktiLabel?: boolean;
+}
+
 export function calculateAverageRubric(
   scores?: Partial<SelfRubricScores> | Partial<AiValidationScores> | null
 ): number {
@@ -106,4 +202,3 @@ export function calculateAverageRubric(
     Number(scores.tindakLanjut || 0);
   return Number((total / 5).toFixed(2));
 }
-

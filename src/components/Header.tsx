@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
           {[
             { id: "tulis", label: "Dashboard Refleksi", icon: BookOpen },
             { id: "evaluasi", label: "Evaluasi Mandiri & Grafik", icon: Sparkles },
-            { id: "laporan", label: "Laporan Mingguan", icon: School },
+            { id: "laporan", label: "Laporan Siklus (Format A-H)", icon: School },
             { id: "riwayat", label: `Riwayat (${historyCount})`, icon: User },
           ].map((tab) => {
             const Icon = tab.icon;

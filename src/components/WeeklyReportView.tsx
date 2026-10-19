@@ -10,6 +10,12 @@ import {
   User,
   ChevronDown,
   Award,
+  Users,
+  Copy,
+  Check,
+  Download,
+  AlertCircle,
+  TrendingUp,
 } from "lucide-react";
 import {
   ReflectionEntry,
@@ -32,12 +38,13 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const [selectedEntryId, setSelectedEntryId] = useState<string>(
     currentEntry?.id || entries[0]?.id || ""
   );
-  const [reportMode, setReportMode] = useState<"mingguan" | "sintesis">(
-    "mingguan"
+  const [reportMode, setReportMode] = useState<"siklus" | "sintesis">(
+    "siklus"
   );
   const [synthesisReport, setSynthesisReport] =
     useState<WeeklySynthesisReport | null>(null);
   const [isLoadingSynthesis, setIsLoadingSynthesis] = useState<boolean>(false);
+  const [hasCopiedReport, setHasCopiedReport] = useState<boolean>(false);
 
   const activeEntry =
     entries.find((e) => e.id === selectedEntryId) ||
@@ -74,8 +81,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       setSynthesisReport({
         id: "synth-" + Date.now(),
         generatedAt: new Date().toISOString(),
-        periodeRentang: `Minggu 1 s.d. Minggu ${entries.length}`,
-        judulLaporan: data.judulLaporan || "Laporan Sintesis Refleksi Mingguan Guru",
+        periodeRentang: `Siklus 1 s.d. Siklus ${entries.length}`,
+        judulLaporan: data.judulLaporan || "Laporan Sintesis Refleksi Siklus TET Guru",
         rangkumanEksekutif: data.rangkumanEksekutif,
         analisisTren: data.analisisTren,
         tingkatKematanganInkuiri: data.tingkatKematanganInkuiri || "Cakap",
@@ -88,6 +95,62 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     } finally {
       setIsLoadingSynthesis(false);
     }
+  };
+
+  // Build the sequential text for Sections A to H
+  const buildSequentialTextAH = () => {
+    const format = activeEntry?.aiFeedback?.laporanFormatTetap;
+    return `
+LAPORAN REFLEKSI SIKLUS (BERBASIS SIKLUS TET & INKUIRI KOLABORATIF)
+${profile.sekolah}
+============================================================
+
+BAGIAN A. IDENTITAS SIKLUS:
+- Mata Pelajaran: ${profile.mapel}
+- Kelas: ${profile.faseKelas}
+- Elemen / Materi: ${activeEntry?.elemenTP || "-"}
+- Pertemuan / Siklus: Siklus ${activeEntry?.siklus || 1} (Minggu ke-${activeEntry?.mingguKe || 1})
+- Tanggal / Periode: ${activeEntry?.periode || "-"}
+- Rekan Kolaborasi: ${activeEntry?.rekan || "MGMP Satuan Pendidikan"}
+- Rekap Kuantitatif Murid: ${activeEntry?.jumlahSiswa || 32} murid | KKTP: ${activeEntry?.kktp || 75} | Rata-rata NA: ${activeEntry?.rataNA || 0} | % Ketuntasan: ${activeEntry?.persenTuntas || 0}% | Partisipasi: ${activeEntry?.keterlibatanRate || 0}%
+
+BAGIAN B. IDENTIFIKASI (ASSESS):
+${format?.bagianB_Identifikasi || activeEntry?.assess || "-"}
+
+BAGIAN C. DESAIN (DESIGN):
+${format?.bagianC_Desain || activeEntry?.design || "-"}
+
+BAGIAN D. IMPLEMENTASI (IMPLEMENT):
+${format?.bagianD_Implementasi || activeEntry?.implement || "-"}
+
+BAGIAN E. AMATI DAN REFLEKSI (MEASURE - REFLECT - CHANGE):
+${format?.bagianE_AmatiRefleksi || activeEntry?.measure || "-"}
+
+BAGIAN F. PERUBAHAN DAN TINDAK LANJUT:
+${format?.bagianF_PerubahanTindakLanjut || activeEntry?.rencanaPerubahanBerikutnya || "Penyempurnaan panduan peran dan alur transisi kelas."}
+Indikator Pemantauan: ${activeEntry?.indikatorPemantauan || "Capaian ketuntasan murid meningkat pada topik bertingkat."}
+
+BAGIAN G. BERBAGI PRAKTIK BAIK:
+${format?.bagianG_BerbagiPraktik || activeEntry?.share || "Didiseminasikan melalui forum MGMP Informatika dan komunitas belajar sekolah."}
+
+BAGIAN H. CATATAN DATA:
+${
+  activeEntry?.aiFeedback?.periksaBukti && activeEntry.aiFeedback.periksaBukti.length > 0
+    ? activeEntry.aiFeedback.periksaBukti
+        .map((p, i) => `[Perlu Bukti ${i + 1}]: ${p.klaim} -> Saran Bukti: ${p.saranData}`)
+        .join("\n")
+    : "Seluruh kesimpulan telah didukung data dan bukti autentik yang memadai."
+}
+============================================================
+Guru Pengampu: ${profile.nama}
+NIP: ${profile.nip || "-"}
+`.trim();
+  };
+
+  const handleCopyTextReport = () => {
+    navigator.clipboard.writeText(buildSequentialTextAH());
+    setHasCopiedReport(true);
+    setTimeout(() => setHasCopiedReport(false), 2000);
   };
 
   const currentDateFormatted = new Date().toLocaleDateString("id-ID", {
@@ -103,23 +166,23 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
-              onClick={() => setReportMode("mingguan")}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                reportMode === "mingguan"
-                  ? "bg-white text-indigo-600 shadow-xs font-bold"
+              onClick={() => setReportMode("siklus")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                reportMode === "siklus"
+                  ? "bg-white text-indigo-700 shadow-xs font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Laporan Per Minggu
+              Laporan Siklus (Format A-H)
             </button>
             <button
               onClick={() => {
                 setReportMode("sintesis");
                 if (!synthesisReport) generateSynthesisReport();
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 reportMode === "sintesis"
-                  ? "bg-white text-indigo-600 shadow-xs font-bold"
+                  ? "bg-white text-indigo-700 shadow-xs font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -128,9 +191,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             </button>
           </div>
 
-          {reportMode === "mingguan" && entries.length > 1 && (
+          {reportMode === "siklus" && entries.length > 1 && (
             <div className="flex items-center gap-1.5 ml-2">
-              <span className="text-xs text-slate-500">Pilih Minggu:</span>
+              <span className="text-xs text-slate-500 font-medium">Pilih Siklus:</span>
               <select
                 value={selectedEntryId}
                 onChange={(e) => setSelectedEntryId(e.target.value)}
@@ -138,7 +201,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               >
                 {entries.map((item) => (
                   <option key={item.id} value={item.id}>
-                    Minggu {item.mingguKe} (Siklus {item.siklus})
+                    Siklus {item.siklus} (Minggu ke-{item.mingguKe})
                   </option>
                 ))}
               </select>
@@ -147,39 +210,51 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {reportMode === "siklus" && (
+            <button
+              onClick={handleCopyTextReport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-xl transition cursor-pointer"
+            >
+              {hasCopiedReport ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+              <span>{hasCopiedReport ? "Tersalin!" : "Salin Teks A-H"}</span>
+            </button>
+          )}
+
           {reportMode === "sintesis" && (
             <button
               onClick={generateSynthesisReport}
               disabled={isLoadingSynthesis}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl border border-indigo-200 transition cursor-pointer"
             >
               {isLoadingSynthesis ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={13} className="animate-spin" />
               ) : (
-                <Sparkles size={14} />
+                <Sparkles size={13} />
               )}
-              <span>Regenerasi Sintesis AI</span>
+              <span>Regenerasi AI</span>
             </button>
           )}
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm"
-            id="btn-cetak-laporan"
+            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition shadow-xs cursor-pointer"
           >
             <Printer size={15} />
-            <span>Cetak / Simpan PDF</span>
+            <span>Cetak / Unduh PDF</span>
           </button>
         </div>
       </div>
 
-      {/* DOCUMENT CANVAS (Print-ready formal sheet) */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 max-w-4xl mx-auto print:p-0 print:border-none print:shadow-none">
-        {/* Top Watermark for Document */}
-        <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-3 pb-1 border-b border-slate-100">
-          <span>Aplikasi Refleksi Guru SMK · Inkuiri Kolaboratif</span>
+      {/* Printable Sheet Canvas */}
+      <div
+        id="print-section"
+        className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm print:shadow-none print:border-none print:p-0 print:m-0"
+      >
+        {/* Subtle Print Watermark Header */}
+        <div className="hidden print:flex items-center justify-between text-[10px] text-slate-400 border-b border-slate-200 pb-1 mb-4">
+          <span>Aplikasi Refleksi Guru SMK · Berbasis Siklus TET & Inkuiri Kolaboratif</span>
           <span>
-            watermark: <strong className="text-slate-600 uppercase">kikybahsoan</strong>
+            watermark: <strong className="text-slate-600 uppercase font-mono">kikybahsoan</strong>
           </span>
         </div>
 
@@ -200,7 +275,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 {profile.sekolah}
               </h2>
               <p className="text-xs text-slate-600 mt-0.5">
-                Portofolio Pengelolaan Kinerja & Asesmen Inkuiri Kolaboratif Pembelajaran
+                Portofolio Pengelolaan Kinerja & Asesmen Siklus Teacher Experimental Training (TET)
               </p>
             </div>
             <div className="w-16 sm:w-20 hidden sm:block shrink-0" aria-hidden="true" />
@@ -209,335 +284,374 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           <div className="h-px bg-slate-300" />
         </div>
 
-        {reportMode === "mingguan" ? (
+        {reportMode === "siklus" ? (
           /* ============================================================ */
-          /* LAPORAN MINGGUAN SPESIFIK                                    */
+          /* FORMAT KELUARAN TETAP: BAGIAN A - H                          */
+          /* Dokumen Acuan Halaman 4-5 Bagian 7                           */
           /* ============================================================ */
           <div className="space-y-6 text-slate-800 text-xs sm:text-sm">
             <div className="text-center mb-6">
-              <h3 className="font-heading font-bold text-base sm:text-lg uppercase text-slate-900">
-                Laporan Refleksi Pembelajaran Mingguan Guru
+              <h3 className="font-heading font-extrabold text-base sm:text-lg uppercase text-slate-900">
+                Laporan Refleksi Siklus Pembelajaran Guru
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Minggu ke-{activeEntry?.mingguKe || 1} · Siklus Inkuiri ke-{activeEntry?.siklus || 1} · Periode: {activeEntry?.periode || "-"}
+                Berbasis Siklus Teacher Experimental Training (TET) & Inkuiri Kolaboratif
               </p>
             </div>
 
-            {/* Identitas Tabel */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6">
-                <div className="flex">
-                  <span className="w-36 font-semibold text-slate-500">Nama Guru</span>
-                  <span className="font-medium text-slate-900">: {profile.nama}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-36 font-semibold text-slate-500">NIP / NUPTK</span>
-                  <span className="font-medium text-slate-900">: {profile.nip || "-"}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-36 font-semibold text-slate-500">Mata Pelajaran</span>
-                  <span className="font-medium text-slate-900">: {profile.mapel}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-36 font-semibold text-slate-500">Fase / Kelas</span>
-                  <span className="font-medium text-slate-900">: {profile.faseKelas}</span>
-                </div>
-                <div className="flex">
-                  <span className="w-36 font-semibold text-slate-500">Tahun Ajaran</span>
-                  <span className="font-medium text-slate-900">: {profile.tahunAjaran} ({profile.semester})</span>
-                </div>
-                <div className="flex">
-                  <span className="w-36 font-semibold text-slate-500">Rekan Kolaborasi</span>
-                  <span className="font-medium text-slate-900">: {activeEntry?.rekan || "MGMP Satuan Pendidikan"}</span>
-                </div>
-                <div className="sm:col-span-2 flex">
-                  <span className="w-36 font-semibold text-slate-500 shrink-0">Elemen / TP</span>
-                  <span className="font-medium text-slate-900">: {activeEntry?.elemenTP}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* I. Rekapitulasi Data Kuantitatif */}
-            <div>
-              <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                I. Rekapitulasi Data Kuantitatif Hasil Belajar & Asesmen
-              </h4>
-              <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-                  <tr>
-                    <th className="p-2.5 border-r border-slate-200">Jumlah Siswa</th>
-                    <th className="p-2.5 border-r border-slate-200 text-center">Batas KKTP</th>
-                    <th className="p-2.5 border-r border-slate-200 text-center">Rata-rata NA</th>
-                    <th className="p-2.5 border-r border-slate-200 text-center">% Ketuntasan</th>
-                    <th className="p-2.5 text-center">% Keterlibatan Kelas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-slate-100">
-                    <td className="p-2.5 border-r border-slate-200 font-medium">
-                      {activeEntry?.jumlahSiswa} Orang
-                    </td>
-                    <td className="p-2.5 border-r border-slate-200 text-center font-bold text-rose-600">
-                      {activeEntry?.kktp}
-                    </td>
-                    <td className="p-2.5 border-r border-slate-200 text-center font-bold text-indigo-600">
-                      {activeEntry?.rataNA}
-                    </td>
-                    <td className="p-2.5 border-r border-slate-200 text-center font-bold text-emerald-600">
-                      {activeEntry?.persenTuntas}%
-                    </td>
-                    <td className="p-2.5 text-center font-bold text-amber-600">
-                      {activeEntry?.keterlibatanRate}%
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <p className="text-[11px] text-slate-500 mt-1">
-                * Soal Formatif Kategori Sukar / Distraktor:{" "}
-                <span className="font-semibold text-slate-700">
-                  {activeEntry?.soalSukar || "-"}
+            {/* Bagian A. Identitas Siklus */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-slate-100 px-4 py-2.5 font-heading font-bold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-300 flex items-center justify-between">
+                <span>Bagian A. Identitas Siklus</span>
+                <span className="font-mono text-indigo-700 font-bold">
+                  Siklus {activeEntry?.siklus}
                 </span>
-              </p>
-            </div>
-
-            {/* II. Evaluasi Mandiri Guru Berbasis Rubrik */}
-            <div>
-              <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                II. Evaluasi Mandiri Kompetensi Pedagogik (Skala 1 - 4)
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] text-slate-500 block font-medium">Penguasaan Materi</span>
-                  <span className="text-sm font-bold text-indigo-600 mt-0.5 block">
-                    {activeEntry?.selfRubricScores?.penguasaanMateri || 3}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] text-slate-500 block font-medium">Diferensiasi</span>
-                  <span className="text-sm font-bold text-indigo-600 mt-0.5 block">
-                    {activeEntry?.selfRubricScores?.diferensiasi || 3}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] text-slate-500 block font-medium">Interaktivitas</span>
-                  <span className="text-sm font-bold text-indigo-600 mt-0.5 block">
-                    {activeEntry?.selfRubricScores?.interaktivitas || 3}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] text-slate-500 block font-medium">Analisis Data</span>
-                  <span className="text-sm font-bold text-indigo-600 mt-0.5 block">
-                    {activeEntry?.selfRubricScores?.asesmenData || 3}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 col-span-2 sm:col-span-1">
-                  <span className="text-[10px] text-slate-500 block font-medium">Tindak Lanjut</span>
-                  <span className="text-sm font-bold text-indigo-600 mt-0.5 block">
-                    {activeEntry?.selfRubricScores?.tindakLanjut || 3}
-                  </span>
-                </div>
               </div>
-            </div>
-
-            {/* III. Catatan Inkuiri Kolaboratif 4 Tahap */}
-            <div>
-              <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                III. Ulasan 4 Tahap Inkuiri Kolaboratif Guru
-              </h4>
-              <div className="space-y-3">
-                <div className="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-xs text-rose-700 block mb-1">
-                    A. ASSESS (Identifikasi Masalah & Data Awal):
-                  </span>
-                  <p className="text-xs leading-relaxed text-slate-700">
-                    {activeEntry?.assess || "-"}
-                  </p>
+              <div className="p-4 bg-slate-50/50 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6">
+                  <div className="flex">
+                    <span className="w-36 font-semibold text-slate-500">Mata Pelajaran</span>
+                    <span className="font-medium text-slate-900">: {profile.mapel}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-36 font-semibold text-slate-500">Kelas / Fase</span>
+                    <span className="font-medium text-slate-900">: {profile.faseKelas}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-36 font-semibold text-slate-500">Nama Guru</span>
+                    <span className="font-medium text-slate-900">: {profile.nama}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-36 font-semibold text-slate-500">NIP</span>
+                    <span className="font-medium text-slate-900">: {profile.nip || "-"}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-36 font-semibold text-slate-500">Tanggal / Periode</span>
+                    <span className="font-medium text-slate-900">: {activeEntry?.periode || "-"}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-36 font-semibold text-slate-500">Rekan Kolaborasi</span>
+                    <span className="font-medium text-slate-900">: {activeEntry?.rekan || "MGMP"}</span>
+                  </div>
+                  <div className="sm:col-span-2 flex">
+                    <span className="w-36 font-semibold text-slate-500 shrink-0">Elemen / Materi TP</span>
+                    <span className="font-bold text-slate-900">: {activeEntry?.elemenTP}</span>
+                  </div>
                 </div>
 
-                <div className="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-xs text-indigo-700 block mb-1">
-                    B. DESIGN (Perancangan Strategi & Kolaborasi):
+                {/* Data Kuantitatif Murid */}
+                <div className="mt-4 pt-3 border-t border-slate-200">
+                  <span className="font-bold text-slate-700 block mb-2">
+                    Rekapitulasi Data Kuantitatif Asesmen Murid:
                   </span>
-                  <p className="text-xs leading-relaxed text-slate-700">
-                    {activeEntry?.design || "-"}
-                  </p>
-                </div>
-
-                <div className="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-xs text-amber-700 block mb-1">
-                    C. IMPLEMENT (Pelaksanaan di Kelas & Dinamika):
-                  </span>
-                  <p className="text-xs leading-relaxed text-slate-700">
-                    {activeEntry?.implement || "-"}
-                  </p>
-                </div>
-
-                <div className="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-xs text-emerald-700 block mb-1">
-                    D. MEASURE, REFLECT, CHANGE (Pengukuran, Refleksi & Perubahan):
-                  </span>
-                  <p className="text-xs leading-relaxed text-slate-700">
-                    {activeEntry?.measure || "-"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* IV. Rekomendasi Terstandar & Ulasan Validasi AI */}
-            {activeEntry?.aiFeedback && (
-              <div>
-                <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                  IV. Sintesis Validasi & Acuan Terstandar AI
-                </h4>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
-                  <p>
-                    <span className="font-bold text-indigo-700">
-                      Landasan Acuan:{" "}
-                    </span>
-                    {activeEntry.aiFeedback.acuanStandar}
-                  </p>
-                  <p className="leading-relaxed">
-                    <span className="font-bold text-indigo-700">
-                      Diagnostik Objektif:{" "}
-                    </span>
-                    {activeEntry.aiFeedback.ringkasanDiagnostik}
-                  </p>
-                  <div>
-                    <span className="font-bold text-indigo-700 block mb-1">
-                      Rekomendasi Tindak Lanjut Terstruktur:
-                    </span>
-                    <ul className="list-disc list-inside space-y-1 pl-1 text-slate-700">
-                      {activeEntry.aiFeedback.rekomendasi_utama.map((rec, i) => (
-                        <li key={i}>{rec}</li>
-                      ))}
-                    </ul>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                    <div className="p-2 bg-white rounded-xl border border-slate-200">
+                      <span className="text-[10px] text-slate-500 block">Jumlah Murid</span>
+                      <strong className="text-slate-900">{activeEntry?.jumlahSiswa} Orang</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-slate-200">
+                      <span className="text-[10px] text-slate-500 block">Batas KKTP</span>
+                      <strong className="text-rose-600">{activeEntry?.kktp}</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-slate-200">
+                      <span className="text-[10px] text-slate-500 block">Rata-rata NA</span>
+                      <strong className="text-indigo-600">{activeEntry?.rataNA}</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-slate-200">
+                      <span className="text-[10px] text-slate-500 block">% Ketuntasan</span>
+                      <strong className="text-emerald-600">{activeEntry?.persenTuntas}%</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-slate-200 col-span-2 sm:col-span-1">
+                      <span className="text-[10px] text-slate-500 block">Partisipasi Kelas</span>
+                      <strong className="text-amber-600">{activeEntry?.keterlibatanRate}%</strong>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Bagian B. Identifikasi */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-rose-50/80 px-4 py-2.5 font-heading font-bold text-rose-900 text-xs uppercase tracking-wider border-b border-rose-200">
+                Bagian B. Identifikasi (Assess)
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Masalah Prioritas dan Bukti Pendukung:
+                </span>
+                <p className="whitespace-pre-line">
+                  {activeEntry?.assess || "Belum ada catatan identifikasi masalah."}
+                </p>
+                {activeEntry?.soalSukar && (
+                  <p className="text-[11px] text-rose-800 bg-rose-50 p-2 rounded-lg font-medium">
+                    📌 <strong>Fokus Miskonsepsi:</strong> {activeEntry.soalSukar}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Bagian C. Desain */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-indigo-50/80 px-4 py-2.5 font-heading font-bold text-indigo-900 text-xs uppercase tracking-wider border-b border-indigo-200">
+                Bagian C. Desain (Design)
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Tujuan Terukur, Strategi/Eksperimen, Indikator Keberhasilan & Pihak Terlibat:
+                </span>
+                <p className="whitespace-pre-line">
+                  {activeEntry?.design || "Belum ada catatan desain eksperimen pembelajaran."}
+                </p>
+              </div>
+            </div>
+
+            {/* Bagian D. Implementasi */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-amber-50/80 px-4 py-2.5 font-heading font-bold text-amber-900 text-xs uppercase tracking-wider border-b border-amber-200">
+                Bagian D. Implementasi (Implement)
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Catatan Pelaksanaan di Kelas dan Daftar Dokumentasi:
+                </span>
+                <p className="whitespace-pre-line">
+                  {activeEntry?.implement || "Belum ada catatan pelaksanaan eksperimen nyata di kelas."}
+                </p>
+                {activeEntry?.buktiData?.keterlibatanOrangTua && (
+                  <p className="text-[11px] text-amber-900 bg-amber-50 p-2 rounded-lg font-medium">
+                    👨‍👩‍👧 <strong>Keterlibatan Orang Tua:</strong> {activeEntry.buktiData.keterlibatanOrangTua}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Bagian E. Amati dan Refleksi */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-emerald-50/80 px-4 py-2.5 font-heading font-bold text-emerald-900 text-xs uppercase tracking-wider border-b border-emerald-200">
+                Bagian E. Amati dan Refleksi (Measure - Reflect - Change)
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Capaian terhadap Indikator, Keberhasilan, Tantangan & Penyebab:
+                </span>
+                <p className="whitespace-pre-line">
+                  {activeEntry?.measure || "Belum ada catatan pengukuran dampak dan evaluasi tantangan."}
+                </p>
+              </div>
+            </div>
+
+            {/* Bagian F. Perubahan dan Tindak Lanjut */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-sky-50/80 px-4 py-2.5 font-heading font-bold text-sky-900 text-xs uppercase tracking-wider border-b border-sky-200">
+                Bagian F. Perubahan dan Tindak Lanjut
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Perbaikan untuk Siklus Berikutnya dan Indikator Pemantauan:
+                </span>
+                <p className="whitespace-pre-line">
+                  {activeEntry?.rencanaPerubahanBerikutnya ||
+                    "Penyempurnaan lembar peran, diferensiasi tugas, dan tindak lanjut remedial."}
+                </p>
+                {activeEntry?.indikatorPemantauan && (
+                  <p className="text-[11px] text-sky-900 bg-sky-50 p-2 rounded-lg font-medium">
+                    🎯 <strong>Indikator Pemantauan:</strong> {activeEntry.indikatorPemantauan}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Bagian G. Berbagi Praktik Baik */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-purple-50/80 px-4 py-2.5 font-heading font-bold text-purple-900 text-xs uppercase tracking-wider border-b border-purple-200">
+                Bagian G. Berbagi Praktik Baik
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Bagian yang Layak Dibagikan, Forum (KKG/MGMP/Sekolah) & Tips Replikasi:
+                </span>
+                <p className="whitespace-pre-line">
+                  {activeEntry?.share ||
+                    "Diseminasi format checklist dan gim interaktif kepada rekan guru di MGMP kejuruan."}
+                </p>
+              </div>
+            </div>
+
+            {/* Bagian H. Catatan Data */}
+            <div className="border border-slate-300 rounded-2xl overflow-hidden">
+              <div className="bg-slate-100 px-4 py-2.5 font-heading font-bold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-300">
+                Bagian H. Catatan Data
+              </div>
+              <div className="p-4 bg-white text-xs leading-relaxed text-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase block">
+                  Bagian yang Masih Perlu Bukti:
+                </span>
+                {activeEntry?.aiFeedback?.periksaBukti &&
+                activeEntry.aiFeedback.periksaBukti.length > 0 ? (
+                  <div className="space-y-2">
+                    {activeEntry.aiFeedback.periksaBukti.map((pb, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-950 flex items-start gap-2"
+                      >
+                        <AlertCircle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-[11px] block font-mono font-bold text-amber-900">
+                            [Perlu Bukti]: {pb.klaim}
+                          </strong>
+                          <span className="text-[11px] text-amber-800">
+                            Saran data autentik: {pb.saranData} ({pb.kategori})
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-emerald-700 bg-emerald-50 p-2.5 rounded-xl font-medium">
+                    ✓ Seluruh simpulan telah didukung oleh data dan bukti autentik yang terverifikasi.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Tanda Tangan Formal */}
+            <div className="pt-8 grid grid-cols-2 text-center text-xs">
+              <div>
+                <p className="text-slate-500">Mengetahui,</p>
+                <p className="font-semibold text-slate-800">Kepala Satuan Pendidikan</p>
+                <div className="h-16" />
+                <p className="font-bold text-slate-900 underline">
+                  Drs. H. Ruslan S. Mohamad, M.Pd.
+                </p>
+                <p className="text-[11px] text-slate-500">NIP. 19680814 199412 1 002</p>
+              </div>
+
+              <div>
+                <p className="text-slate-500">Gorontalo, {currentDateFormatted}</p>
+                <p className="font-semibold text-slate-800">Guru Pengampu (Eksperimenter)</p>
+                <div className="h-16" />
+                <p className="font-bold text-slate-900 underline">{profile.nama}</p>
+                <p className="text-[11px] text-slate-500">NIP. {profile.nip || "-"}</p>
+              </div>
+            </div>
           </div>
         ) : (
           /* ============================================================ */
-          /* LAPORAN SINTESIS KUMULATIF MINGGUAN (SUPERVISORY DOSSIER)     */
+          /* LAPORAN SINTESIS KUMULATIF SIKLUS TET (DOSSIER SUPERVISI)    */
           /* ============================================================ */
           <div className="space-y-6 text-slate-800 text-xs sm:text-sm">
             <div className="text-center mb-6">
-              <h3 className="font-heading font-bold text-base sm:text-lg uppercase text-slate-900">
+              <h3 className="font-heading font-extrabold text-base sm:text-lg uppercase text-slate-900">
                 {synthesisReport?.judulLaporan ||
-                  "Laporan Sintesis Refleksi Mingguan Guru"}
+                  "Laporan Sintesis Refleksi Siklus TET Guru"}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Dossier Rekapitulasi Pembelajaran Berkelanjutan · {profile.mapel}
+                Dossier Rekapitulasi Rangkaian Inkuiri Pembelajaran Berkelanjutan · {profile.mapel}
               </p>
             </div>
 
-            {/* Ringkasan Eksekutif */}
+            {/* 1. Rangkuman Eksekutif */}
             <div>
               <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                1. Rangkuman Eksekutif Kinerja & Refleksi Pembelajaran
+                1. Rangkuman Eksekutif Kinerja & Siklus TET
               </h4>
-              <p className="text-xs leading-relaxed text-slate-700 text-justify bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <p className="text-xs leading-relaxed text-slate-700 text-justify bg-slate-50 p-4 rounded-xl border border-slate-200 whitespace-pre-line">
                 {synthesisReport?.rangkumanEksekutif ||
-                  "Memuat sintesis capaian mengajar guru, komitmen inkuiri, dan evaluasi hasil belajar..."}
+                  "Memuat sintesis capaian eksperimen mengajar guru, komitmen inkuiri, dan evaluasi hasil belajar murid..."}
               </p>
             </div>
 
-            {/* Analisis Tren Perkembangan */}
+            {/* 2. Analisis Tren Perkembangan */}
             <div>
               <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                2. Analisis Tren Perkembangan Peserta Didik & Intervensi
+                2. Analisis Tren Perkembangan Murid & Intervensi
               </h4>
               <div className="space-y-2.5 text-xs">
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-indigo-700 block mb-1">
-                    Tren Hasil Belajar (Kuantitatif):
+                <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                  <span className="font-bold text-indigo-700 block mb-0.5">
+                    Tren Hasil Belajar Murid:
                   </span>
-                  <p className="text-slate-700">
+                  <p className="text-slate-700 leading-relaxed">
                     {synthesisReport?.analisisTren?.trenHasilBelajar ||
-                      "Data menunjukkan peningkatan bertahap pada rata-rata nilai dan ketuntasan klasikal."}
+                      "Tren ketuntasan bergerak positif dengan penurunan jumlah murid yang membutuhkan remedial intensif."}
                   </p>
                 </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-amber-700 block mb-1">
-                    Tren Keterlibatan & Iklim Kelas:
+
+                <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                  <span className="font-bold text-emerald-700 block mb-0.5">
+                    Tren Keterlibatan Kelas & Orang Tua:
                   </span>
-                  <p className="text-slate-700">
+                  <p className="text-slate-700 leading-relaxed">
                     {synthesisReport?.analisisTren?.trenKeterlibatan ||
-                      "Keterlibatan aktif siswa meningkat secara konsisten saat metode kolaboratif diimplementasikan."}
+                      "Partisipasi murid meningkat saat media interaktif dan kolaborasi orang tua diaktifkan."}
                   </p>
                 </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="font-bold text-teal-700 block mb-1">
-                    Efektivitas Intervensi Inkuiri Guru:
+
+                <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                  <span className="font-bold text-amber-700 block mb-0.5">
+                    Efektivitas Strategi Intervensi:
                   </span>
-                  <p className="text-slate-700">
+                  <p className="text-slate-700 leading-relaxed">
                     {synthesisReport?.analisisTren?.efektivitasIntervensi ||
-                      "Rancangan perbaikan pada tahap Design terbukti mampu mengatasi miskonsepsi siswa."}
+                      "Strategi intervensi pada tahap Desain terbukti efektif memperkecil kesenjangan pemahaman konsep."}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Rekomendasi Supervisi Akademik */}
+            {/* 3. Catatan Supervisi Akademik */}
             <div>
               <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                3. Catatan Supervisi Akademik & Rekomendasi Strategis
+                3. Catatan Supervisi Akademik & Kematangan Pedagogik
               </h4>
-              <div className="p-4 bg-indigo-50/60 border border-indigo-200 rounded-xl text-xs space-y-2.5">
-                <p>
-                  <span className="font-bold text-indigo-900">
-                    Catatan Asesor / Supervisi:{" "}
-                  </span>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <p className="text-slate-800 leading-relaxed">
                   {synthesisReport?.catatanSupervisi ||
-                    "Guru menunjukkan komitmen tinggi terhadap refleksi berbasis bukti dan peningkatan mutu mengajar."}
+                    "Guru menunjukkan komitmen tinggi dalam menerapkan eksperimen terencana berbasis data formatif autentik."}
                 </p>
-                <div>
-                  <span className="font-bold text-indigo-900 block mb-1">
-                    Rekomendasi Strategis Mendatang:
-                  </span>
-                  <ul className="list-disc list-inside space-y-1 text-slate-800 pl-1">
-                    {(synthesisReport?.rekomendasiStrategis || []).map((rec, i) => (
-                      <li key={i}>{rec}</li>
-                    ))}
-                  </ul>
-                </div>
+              </div>
+            </div>
+
+            {/* 4. Rekomendasi Strategis */}
+            <div>
+              <h4 className="font-heading font-bold text-xs sm:text-sm uppercase text-slate-900 border-b border-slate-200 pb-1 mb-2">
+                4. Rekomendasi Strategis Supervisi & Diseminasi
+              </h4>
+              <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                {(synthesisReport?.rekomendasiStrategis || [
+                  "Pertahankan integrasi data kuantitatif formatif sebagai dasar rancangan pembelajaran.",
+                  "Tingkatkan dokumentasi umpan balik kualitatif langsung dari murid untuk memperkaya portofolio.",
+                  "Diseminasi praktik baik ke MGMP sekolah dan kabupaten/kota secara berkala.",
+                ]).map((rec, i) => (
+                  <li key={i} className="leading-relaxed">
+                    {rec}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Tanda Tangan Formal */}
+            <div className="pt-8 grid grid-cols-2 text-center text-xs">
+              <div>
+                <p className="text-slate-500">Mengetahui,</p>
+                <p className="font-semibold text-slate-800">Kepala Satuan Pendidikan</p>
+                <div className="h-16" />
+                <p className="font-bold text-slate-900 underline">
+                  Drs. H. Ruslan S. Mohamad, M.Pd.
+                </p>
+                <p className="text-[11px] text-slate-500">NIP. 19680814 199412 1 002</p>
+              </div>
+
+              <div>
+                <p className="text-slate-500">Gorontalo, {currentDateFormatted}</p>
+                <p className="font-semibold text-slate-800">Guru Pengampu (Eksperimenter)</p>
+                <div className="h-16" />
+                <p className="font-bold text-slate-900 underline">{profile.nama}</p>
+                <p className="text-[11px] text-slate-500">NIP. {profile.nip || "-"}</p>
               </div>
             </div>
           </div>
         )}
-
-        {/* Kolom Tanda Tangan Resmi (Academic Verification) */}
-        <div className="pt-10 mt-8 border-t border-slate-200 grid grid-cols-2 text-center text-xs text-slate-800">
-          <div>
-            <p className="text-slate-500">Mengetahui,</p>
-            <p className="font-semibold text-slate-700 mt-0.5">
-              Kepala Sekolah / Guru Pamong
-            </p>
-            <div className="h-20" />
-            <p className="font-bold text-slate-900 underline">
-              Drs. H. Ahmad Rahim, M.Pd.
-            </p>
-            <p className="text-slate-500 text-[11px]">
-              NIP. 19681120 199403 1 004
-            </p>
-          </div>
-
-          <div>
-            <p className="text-slate-500">
-              Gorontalo, {currentDateFormatted}
-            </p>
-            <p className="font-semibold text-slate-700 mt-0.5">
-              Guru Mata Pelajaran
-            </p>
-            <div className="h-20" />
-            <p className="font-bold text-slate-900 underline">
-              {profile.nama}
-            </p>
-            <p className="text-slate-500 text-[11px]">
-              NIP. {profile.nip || "19880512 201101 1 008"}
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

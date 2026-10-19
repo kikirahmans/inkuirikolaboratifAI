@@ -104,6 +104,17 @@ export default function App() {
       design: "",
       implement: "",
       measure: "",
+      share: "",
+      buktiData: {
+        hasilBelajar: "",
+        keterlibatanMurid: "",
+        praktikGuru: "",
+        keterlibatanOrangTua: "",
+        prosesDigital: "",
+        umpanBalikSejawat: "",
+      },
+      rencanaPerubahanBerikutnya: "",
+      indikatorPemantauan: "",
       selfRubricScores: {
         penguasaanMateri: 3,
         diferensiasi: 3,
@@ -116,6 +127,52 @@ export default function App() {
     };
 
     setActiveEntry(fresh);
+    setActiveTab("tulis");
+  };
+
+  // Iterasi Siklus Lanjutan (TET): Menjadikan hasil Tahap 4 & 5 sebagai dasar Tahap 1 siklus baru
+  const handleIterateNextCycle = (current: ReflectionEntry) => {
+    const nextWeek = (current.mingguKe || 1) + 1;
+    const nextCycle = (current.siklus || 1) + 1;
+
+    const freshIterative: ReflectionEntry = {
+      id: "ref-" + Math.random().toString(36).slice(2, 9),
+      savedAt: new Date().toISOString(),
+      mingguKe: nextWeek,
+      siklus: nextCycle,
+      periode: `Minggu ke-${nextWeek}`,
+      elemenTP: current.elemenTP,
+      rekan: current.rekan || "MGMP Satuan Pendidikan",
+      jumlahSiswa: current.jumlahSiswa || 32,
+      rataNA: current.rataNA || 75.0,
+      kktp: current.kktp || 75,
+      persenTuntas: current.persenTuntas || 75.0,
+      keterlibatanRate: current.keterlibatanRate || 80,
+      soalSukar: "",
+      // Inkuiri Iteratif: Temuan & rencana siklus sebelumnya menjadi dasar Assess & Design siklus baru
+      assess: `Menindaklanjuti temuan Siklus ${current.siklus}: Dari evaluasi sebelumnya, ketuntasan murid berada di ${current.persenTuntas}% dengan rata-rata ${current.rataNA}. Fokus pemecahan masalah diarahkan untuk menuntaskan miskonsepsi "${current.soalSukar || "bagian materi sukar"}".`,
+      design: current.rencanaPerubahanBerikutnya
+        ? `Menerapkan rencana perubahan dari Siklus ${current.siklus}: ${current.rencanaPerubahanBerikutnya}. Indikator keberhasilan: ${current.indikatorPemantauan || "Peningkatan ketuntasan murid >80%"}."`
+        : "",
+      implement: "",
+      measure: "",
+      share: "",
+      buktiData: {
+        hasilBelajar: "",
+        keterlibatanMurid: "",
+        praktikGuru: "",
+        keterlibatanOrangTua: "",
+        prosesDigital: "",
+        umpanBalikSejawat: "",
+      },
+      rencanaPerubahanBerikutnya: "",
+      indikatorPemantauan: "",
+      selfRubricScores: { ...current.selfRubricScores },
+      aiFeedback: null,
+      status: "draft",
+    };
+
+    handleSaveEntry(freshIterative);
     setActiveTab("tulis");
   };
 
@@ -145,17 +202,20 @@ export default function App() {
     setActiveTab("tulis");
   };
 
-  // Delete entry
+  // Delete entry (Konfirmasi ditangani oleh modal in-app pada HistoryArchive)
   const handleDeleteEntry = (id: string) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus refleksi ini dari riwayat?")) {
-      const remaining = entries.filter((e) => e.id !== id);
-      setEntries(remaining);
-      if (activeEntry.id === id) {
-        if (remaining.length > 0) {
-          setActiveEntry(remaining[0]);
-        } else {
-          handleNewReflection();
-        }
+    const remaining = entries.filter((e) => e.id !== id);
+    setEntries(remaining);
+    try {
+      localStorage.setItem(STORAGE_ENTRIES_KEY, JSON.stringify(remaining));
+    } catch (e) {
+      console.error("Gagal memperbarui riwayat di localStorage:", e);
+    }
+    if (activeEntry.id === id) {
+      if (remaining.length > 0) {
+        setActiveEntry(remaining[0]);
+      } else {
+        handleNewReflection();
       }
     }
   };
@@ -240,15 +300,24 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {activeTab === "tulis" && (
-          <ReflectionForm
-            key={activeEntry.id}
-            profile={profile}
-            initialEntry={activeEntry}
-            onSave={handleSaveEntry}
-            onViewReport={handleViewReport}
-          />
-        )}
+        {activeTab === "tulis" && (() => {
+          const previousEntry =
+            entries
+              .filter((e) => e.id !== activeEntry.id && e.siklus < activeEntry.siklus)
+              .sort((a, b) => b.siklus - a.siklus)[0] || null;
+
+          return (
+            <ReflectionForm
+              key={activeEntry.id}
+              profile={profile}
+              initialEntry={activeEntry}
+              previousEntry={previousEntry}
+              onSave={handleSaveEntry}
+              onViewReport={handleViewReport}
+              onIterateNextCycle={handleIterateNextCycle}
+            />
+          );
+        })()}
 
         {activeTab === "evaluasi" && (
           <SelfEvaluationCharts
@@ -281,7 +350,7 @@ export default function App() {
       <footer className="bg-white border-t border-slate-200 py-4 no-print text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
-            RefleksiGuru · Model Inkuiri Kolaboratif (Assess-Design-Implement-Measure) & Validasi AI
+            RefleksiGuru · Siklus Teacher Experimental Training (TET) & Inkuiri Kolaboratif Kemendikbudristek
           </p>
           <p className="text-slate-400">
             {profile.sekolah} · {profile.mapel}

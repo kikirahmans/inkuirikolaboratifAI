@@ -8,8 +8,10 @@ import {
   FileText,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Award,
   BookOpen,
+  X,
 } from "lucide-react";
 import { ReflectionEntry, calculateAverageRubric } from "../types";
 
@@ -29,19 +31,54 @@ export const HistoryArchive: React.FC<HistoryArchiveProps> = ({
   onViewReport,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [entryToDelete, setEntryToDelete] = useState<ReflectionEntry | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const filteredEntries = entries.filter((e) => {
     const term = searchTerm.toLowerCase();
     return (
-      e.elemenTP.toLowerCase().includes(term) ||
-      e.periode.toLowerCase().includes(term) ||
-      e.rekan.toLowerCase().includes(term) ||
-      `minggu ${e.mingguKe}`.includes(term)
+      (e.elemenTP || "").toLowerCase().includes(term) ||
+      (e.periode || "").toLowerCase().includes(term) ||
+      (e.rekan || "").toLowerCase().includes(term) ||
+      `minggu ${e.mingguKe}`.includes(term) ||
+      `siklus ${e.siklus}`.includes(term)
     );
   });
 
+  const handleConfirmDelete = () => {
+    if (!entryToDelete) return;
+    const siklus = entryToDelete.siklus;
+    const minggu = entryToDelete.mingguKe;
+    const id = entryToDelete.id;
+
+    onDeleteEntry(id);
+    setEntryToDelete(null);
+    setToastMessage(`Catatan refleksi Siklus ${siklus} (Minggu ke-${minggu}) berhasil dihapus.`);
+
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center justify-between shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+            <span className="font-medium">{toastMessage}</span>
+          </div>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="text-emerald-600 hover:text-emerald-800 p-1 rounded-lg hover:bg-emerald-100 transition"
+            title="Tutup pesan"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Header & Search */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -184,17 +221,95 @@ export const HistoryArchive: React.FC<HistoryArchiveProps> = ({
                     </button>
 
                     <button
-                      onClick={() => onDeleteEntry(entry.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"
+                      onClick={() => setEntryToDelete(entry)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60 rounded-xl transition cursor-pointer"
                       title="Hapus dari riwayat"
+                      aria-label={`Hapus Siklus ${entry.siklus}`}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
+                      <span>Hapus</span>
                     </button>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* In-App Deletion Confirmation Modal */}
+      {entryToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-delete-title"
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
+                  <Trash2 size={24} />
+                </div>
+                <button
+                  onClick={() => setEntryToDelete(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                  aria-label="Tutup dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <h3 id="modal-delete-title" className="font-heading font-bold text-lg text-slate-900">
+                Hapus Refleksi dari Riwayat?
+              </h3>
+
+              <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
+                Apakah Anda yakin ingin menghapus catatan refleksi ini? Tindakan ini akan menghapus data dari memori browser dan tidak dapat dibatalkan.
+              </p>
+
+              {/* Entry Details Preview */}
+              <div className="mt-4 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                    Siklus {entryToDelete.siklus}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-700">
+                    Minggu ke-{entryToDelete.mingguKe}
+                  </span>
+                  <span className="text-[11px] text-slate-400">· {entryToDelete.periode}</span>
+                </div>
+                <p className="text-xs font-medium text-slate-700 line-clamp-1">
+                  {entryToDelete.elemenTP || "(Tanpa Judul Elemen TP)"}
+                </p>
+                <div className="text-[11px] text-slate-400">
+                  Rata NA: {entryToDelete.rataNA} · Ketuntasan: {entryToDelete.persenTuntas}%
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEntryToDelete(null)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 rounded-xl transition flex items-center gap-1.5 shadow-sm shadow-rose-200 cursor-pointer"
+                >
+                  <Trash2 size={14} />
+                  <span>Ya, Hapus Refleksi</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

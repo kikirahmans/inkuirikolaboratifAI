@@ -14,6 +14,14 @@ import {
   Target,
   FileCheck,
   Compass,
+  ArrowRight,
+  GitCompare,
+  Share2,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   ReflectionEntry,
@@ -21,120 +29,167 @@ import {
   SelfRubricScores,
   AiFeedback,
   calculateAverageRubric,
+  BuktiDataInput,
 } from "../types";
 import { SelfRubricInput } from "./SelfRubricInput";
 import { buildFallbackAnalysis } from "../utils/fallbackAnalyzer";
+import { AiFacilitatorChat } from "./AiFacilitatorChat";
+import { StarExportModal } from "./StarExportModal";
+import { PeerModeModal } from "./PeerModeModal";
+import { CycleComparisonCard } from "./CycleComparisonCard";
 
 interface ReflectionFormProps {
   profile: TeacherProfile;
   initialEntry?: ReflectionEntry | null;
+  previousEntry?: ReflectionEntry | null;
   onSave: (entry: ReflectionEntry) => void;
   onViewReport: (entry: ReflectionEntry) => void;
+  onIterateNextCycle?: (currentEntry: ReflectionEntry) => void;
 }
 
-const INQUIRY_STAGES = [
+// 5 Tahap Siklus TET & Inkuiri Kolaboratif dari Dokumen Acuan Halaman 1-3
+const TET_STAGES = [
   {
     key: "assess" as const,
-    kode: "A",
-    judul: "Assess",
-    sub: "Identifikasi Kebutuhan & Data Awal",
+    nomor: 1,
+    tahapTET: "Identifikasi",
+    tahapInkuiri: "Assess",
+    tujuan: "Memahami kebutuhan pengembangan secara utuh dari data nyata, bukan asumsi.",
+    keluaran: "Rumusan 1-3 masalah prioritas beserta bukti pendukungnya.",
     badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
     borderColor: "border-l-rose-500",
-    headerColor: "text-rose-600",
-    pertanyaan: [
-      "Data apa (asesmen diagnostik/formatif awal) yang Anda gunakan untuk memahami kesiapan awal siswa?",
-      "Tantangan nyata apa yang paling menonjol dihadapi siswa dalam mencapai TP?",
-      "Pola kesalahan atau miskonsepsi apa yang paling sering muncul?",
+    headerColor: "text-rose-700",
+    pertanyaanPemandu: [
+      "Pertemuan atau siklus mana yang ingin Bapak/Ibu refleksikan, dan apa tujuan pembelajarannya?",
+      "Data apa yang sudah ada: hasil belajar murid, catatan observasi kelas, umpan balik murid, dan catatan refleksi sebelumnya?",
+      "Dari data tersebut, pola masalah apa yang paling sering muncul (misalnya murid cepat kehilangan minat pada materi abstrak)?",
+      "Bagaimana temuan ini dibandingkan dengan masukan rekan sejawat atau kepala sekolah (jika ada)?",
     ],
     placeholder:
-      "Contoh: Dari tes formatif awal, 10 dari 32 siswa mengalami kesulitan pada logika percabangan kondisi. Miskonsepsi utama terletak pada urutan eksekusi kondisi majemuk...",
+      "Contoh: Dari tes formatif awal, 10 dari 32 murid (31.25%) belum mencapai KKTP pada materi logika dekomposisi. Pola masalah: murid cepat jenuh ketika teori diajarkan tanpa media visual...",
   },
   {
     key: "design" as const,
-    kode: "B",
-    judul: "Design",
-    sub: "Perancangan Strategi & Kolaborasi",
+    nomor: 2,
+    tahapTET: "Desain",
+    tahapInkuiri: "Design",
+    tujuan: "Merumuskan solusi dan eksperimen pembelajaran yang spesifik dan terukur.",
+    keluaran: "Rencana eksperimen singkat berisi tujuan, strategi, indikator, peran pihak terkait, dan instrumen.",
     badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200",
     borderColor: "border-l-indigo-600",
-    headerColor: "text-indigo-600",
-    pertanyaan: [
-      "Strategi atau model pembelajaran apa (misal: Pair Programming, PBL, Diferensiasi) yang Anda rancang untuk menjawab tantangan tersebut?",
-      "Dengan siapa Anda berdiskusi atau berkolaborasi (rekan MGMP/guru kejuruan/mitra)?",
-      "Media, alat peraga, atau modul ajar/LKPD apa yang Anda siapkan?",
+    headerColor: "text-indigo-700",
+    pertanyaanPemandu: [
+      "Strategi atau eksperimen apa yang akan dicoba (misalnya simulasi unplugged, gim di Papan Interaktif, tugas bersama orang tua, infografis berbantuan AI)?",
+      "Apa tujuan yang terukur dan indikator keberhasilannya (misalnya persentase ketuntasan, tingkat keterlibatan, kualitas produk)?",
+      "Siapa saja yang terlibat (murid, orang tua, rekan sejawat, kepala sekolah) dan apa perannya?",
+      "Instrumen apa yang akan dipakai untuk memantau (Google Classroom, lembar observasi, lembar kerja refleksi murid)?",
     ],
     placeholder:
-      "Contoh: Bersama rekan MGMP Informatika, kami merancang model Pair Programming berbantuan LKPD dengan scaffolding bertahap dan simulasi kartu alur logika...",
+      "Contoh: Merancang inovasi 'Huyula Digital' memadukan kartu unplugged, gim kuis di Papan Interaktif Digital, dan tugas infografis bersama orang tua. Target: ketuntasan >80% dan partisipasi kelas >85%...",
   },
   {
     key: "implement" as const,
-    kode: "C",
-    judul: "Implement",
-    sub: "Pelaksanaan di Kelas & Dinamika",
+    nomor: 3,
+    tahapTET: "Implementasi",
+    tahapInkuiri: "Implement",
+    tujuan: "Mencatat apa yang benar-benar terjadi saat eksperimen dijalankan di kelas.",
+    keluaran: "Catatan pelaksanaan beserta daftar bukti dokumentasi.",
     badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
     borderColor: "border-l-amber-500",
-    headerColor: "text-amber-600",
-    pertanyaan: [
-      "Bagaimana proses implementasi strategi ini berjalan di kelas/lab?",
-      "Kendala nyata apa yang muncul selama proses pembelajaran?",
-      "Bagaimana respons, antusiasme, dan dinamika partisipasi siswa?",
+    headerColor: "text-amber-700",
+    pertanyaanPemandu: [
+      "Apakah pelaksanaan sesuai desain? Bagian mana yang berubah dan mengapa?",
+      "Bagaimana jalannya kegiatan di kelas dan keterlibatan orang tua dalam tugas aplikatif?",
+      "Dokumentasi apa yang tersedia (foto, tangkapan layar Classroom, hasil kerja murid, catatan observasi)?",
+      "Dukungan atau pendampingan apa yang diterima (supervisi, peer observation, lesson study)?",
     ],
     placeholder:
-      "Contoh: Pembelajaran di lab komputer berjalan aktif, keterlibatan mencapai 85%. Namun transisi antar pasangan sempat memakan waktu dan beberapa PC mengalami kendala koneksi...",
+      "Contoh: Eksperimen di kelas berjalan aktif, keterlibatan mencapai 84%. Sebanyak 30 dari 32 orang tua mengunggah bukti tanda tangan di Classroom. Waktu transisi berhasil dipangkas berkat checklist peran...",
   },
   {
     key: "measure" as const,
-    kode: "D",
-    judul: "Measure, Reflect, Change",
-    sub: "Pengukuran Hasil, Refleksi & Perubahan",
+    nomor: 4,
+    tahapTET: "Amati dan Refleksi",
+    tahapInkuiri: "Measure - Reflect - Change",
+    tujuan: "Mengukur dampak, memahami keberhasilan dan tantangan, lalu merumuskan perbaikan.",
+    keluaran: "Analisis dampak, daftar keberhasilan, tantangan, area perbaikan, dan rencana perubahan siklus berikutnya.",
     badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
     borderColor: "border-l-emerald-500",
-    headerColor: "text-emerald-600",
-    pertanyaan: [
-      "Bagaimana hasil belajar murid setelah strategi diterapkan (ketuntasan KKTP & rata-rata)?",
-      "Bagian mana dari strategi Anda yang terbukti sangat efektif, dan mana yang kurang efektif?",
-      "Tindakan konkret apa yang akan Anda ubah atau sesuaikan pada siklus berikutnya?",
+    headerColor: "text-emerald-700",
+    pertanyaanPemandu: [
+      "Bagaimana capaian dibandingkan indikator yang ditetapkan? Sebutkan angka atau bukti konkret.",
+      "Apa yang berjalan baik, apa tantangannya, dan apa penyebab yang paling mungkin?",
+      "Apa yang berubah pada praktik mengajar Bapak/Ibu sendiri setelah eksperimen ini?",
+      "Perubahan apa yang akan dicoba pada siklus berikutnya, dan indikator apa yang akan dipantau?",
     ],
     placeholder:
-      "Contoh: Ketuntasan meningkat menjadi 82% dengan rata-rata 78.5. Soal analisis studi kasus masih membutuhkan visualisasi diagram alur sebelum siswa koding mandiri...",
+      "Contoh: Ketuntasan murid mencapai 81.25% (naik 12.5% dari siklus 1) dengan rata-rata nilai 78.2. Kunci keberhasilan: tutor sebaya. Rencana siklus berikutnya: menambahkan visualisasi decision tree...",
+  },
+  {
+    key: "share" as const,
+    nomor: 5,
+    tahapTET: "Berbagi Praktik Baik",
+    tahapInkuiri: "(Tindak Lanjut Komunitas)",
+    tujuan: "Menyebarluaskan pengalaman efektif agar menjadi pengetahuan bersama.",
+    keluaran: "Draf dokumentasi praktik baik (ringkasan, langkah, bukti, tips replikasi).",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    borderColor: "border-l-purple-500",
+    headerColor: "text-purple-700",
+    pertanyaanPemandu: [
+      "Bagian praktik mana yang terbukti efektif dan layak dibagikan?",
+      "Kepada siapa dan melalui forum apa akan dibagikan (KKG/MGMP/sekolah)? Bagaimana rekan dapat mereplikasi atau mengadaptasinya?",
+      "Apa kaitannya dengan program atau kebijakan sekolah?",
+    ],
+    placeholder:
+      "Contoh: Lembar checklist peran dan alur gim interaktif telah dibagikan kepada 5 guru MGMP Informatika. Dua rekan telah mereplikasinya untuk materi algoritma kejuruan lain...",
   },
 ];
 
 export const ReflectionForm: React.FC<ReflectionFormProps> = ({
   profile,
   initialEntry,
+  previousEntry,
   onSave,
   onViewReport,
+  onIterateNextCycle,
 }) => {
   const [draft, setDraft] = useState<ReflectionEntry>(() => {
     if (initialEntry) return initialEntry;
     return {
       id: "ref-" + Math.random().toString(36).slice(2, 9),
       savedAt: new Date().toISOString(),
-      mingguKe: 4,
-      siklus: 4,
-      periode: "08 - 12 September 2026",
-      elemenTP: "Informatika & KKA: Rekursi & Logika Algoritma Pencarian Linear",
+      mingguKe: 2,
+      siklus: 2,
+      periode: "25 - 29 Agustus 2026",
+      elemenTP: "Berpikir Komputasional: Pengenalan Pola & Algoritma Percabangan Logika",
       rekan: "MGMP Informatika SMK Negeri 2 Gorontalo",
-      jumlahSiswa: 32,
-      rataNA: 79.5,
+      jumlahSiswa: 32, // murid
+      rataNA: 78.2,
       kktp: 75,
       persenTuntas: 81.25,
-      keterlibatanRate: 85,
-      soalSukar: "Soal 4 (Penentuan Kasus Dasar / Base Case pada Algoritma Rekursif)",
-      assess:
-        "Melalui kuis diagnostik, siswa telah menguasai konsep perulangan reguler (for loop). Namun ketika diperkenalkan konsep fungsi rekursif, sebagian besar siswa mengalami kesulitan memvisualisasikan penumpukan memori (call stack) dan sering melupakan kondisi base case sehingga terjadi infinite recursion.",
-      design:
-        "Bekerja sama dengan rekan sejawat MGMP, kami merancang pembelajaran berbasis simulasi fisik peran (Role Play Call Stack) menggunakan kartu indeks dan papan visual alur rekursi sebelum siswa menulis kode di komputer.",
-      implement:
-        "Aktivitas simulasi fisik di awal kelas sangat efektif memecah kebingungan siswa; mereka bergiliran menjadi 'fungsi anak' yang mengembalikan nilai. Kelas sangat hidup dengan partisipasi aktif mencapai 85%.",
-      measure:
-        "Hasil asesmen formatif menunjukkan 26 dari 32 siswa (81.25%) tuntas melampaui KKTP dengan nilai rata-rata 79.5. Rencana siklus berikutnya: menghubungkan konsep rekursi ini dengan algoritma pencarian biner (binary search).",
+      keterlibatanRate: 84,
+      soalSukar: "Soal 3 (Pola Kondisi Majemuk AND/OR pada Skema Warna)",
+      assess: "",
+      design: "",
+      implement: "",
+      measure: "",
+      share: "",
+      buktiData: {
+        hasilBelajar: "",
+        keterlibatanMurid: "",
+        praktikGuru: "",
+        keterlibatanOrangTua: "",
+        prosesDigital: "",
+        umpanBalikSejawat: "",
+      },
+      rencanaPerubahanBerikutnya: "",
+      indikatorPemantauan: "",
       selfRubricScores: {
         penguasaanMateri: 3.5,
         diferensiasi: 3.2,
-        interaktivitas: 3.8,
-        asesmenData: 3.6,
-        tindakLanjut: 3.5,
+        interaktivitas: 3.5,
+        asesmenData: 3.5,
+        tindakLanjut: 3.4,
       },
       aiFeedback: null,
       status: "draft",
@@ -142,30 +197,53 @@ export const ReflectionForm: React.FC<ReflectionFormProps> = ({
   });
 
   const [isLoadingAi, setIsLoadingAi] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [isSavedAlert, setIsSavedAlert] = useState<boolean>(false);
+  const [activeTabTahap, setActiveTabTahap] = useState<number>(1);
+  const [showEvidencePanel, setShowEvidencePanel] = useState<boolean>(false);
 
-  const handleUpdate = (field: keyof ReflectionEntry, value: any) => {
+  // Modals
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [isStarOpen, setIsStarOpen] = useState<boolean>(false);
+  const [isPeerOpen, setIsPeerOpen] = useState<boolean>(false);
+
+  // Opening summary response state
+  const [previousChangeTested, setPreviousChangeTested] = useState<string>("sudah");
+
+  // Handle draft field change
+  const handleChange = (
+    field: keyof ReflectionEntry,
+    value: any
+  ) => {
+    setDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleBuktiChange = (field: keyof BuktiDataInput, value: string) => {
     setDraft((prev) => ({
       ...prev,
-      [field]: value,
+      buktiData: {
+        ...(prev.buktiData || {
+          hasilBelajar: "",
+          keterlibatanMurid: "",
+          praktikGuru: "",
+          keterlibatanOrangTua: "",
+          prosesDigital: "",
+          umpanBalikSejawat: "",
+        }),
+        [field]: value,
+      },
     }));
   };
 
-  const handleRubricChange = (scores: SelfRubricScores) => {
-    setDraft((prev) => ({
-      ...prev,
-      selfRubricScores: scores,
-    }));
+  const handleSelfScoresChange = (scores: SelfRubricScores) => {
+    setDraft((prev) => ({ ...prev, selfRubricScores: scores }));
   };
 
-  const requestAiAnalysis = async () => {
+  // Run AI Deep Analysis
+  const handleAnalyzeWithAi = async () => {
     setIsLoadingAi(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-
     try {
-      let result: AiFeedback;
+      let analysisData: AiFeedback;
+
       try {
         const response = await fetch("/api/reflect/analyze", {
           method: "POST",
@@ -174,525 +252,774 @@ export const ReflectionForm: React.FC<ReflectionFormProps> = ({
             teacherProfile: profile,
             draft,
             selfRubricScores: draft.selfRubricScores,
+            previousEntry,
           }),
         });
 
         if (response.ok) {
-          result = await response.json();
+          analysisData = await response.json();
         } else {
-          // Fallback if backend route is unavailable (e.g. static hosting on GitHub Pages)
-          result = buildFallbackAnalysis(draft, draft.selfRubricScores);
+          analysisData = buildFallbackAnalysis(draft, draft.selfRubricScores, previousEntry, profile);
         }
       } catch {
-        // Fallback for network error or offline mode
-        result = buildFallbackAnalysis(draft, draft.selfRubricScores);
+        analysisData = buildFallbackAnalysis(draft, draft.selfRubricScores, previousEntry, profile);
       }
 
-      setDraft((prev) => ({
-        ...prev,
-        aiFeedback: result,
-      }));
-      setSuccessMessage("Analisis reflektif dan acuan pedagogik berhasil diperbarui!");
-    } catch (err: any) {
+      setDraft((prev) => {
+        const updated = {
+          ...prev,
+          aiFeedback: analysisData,
+          status: "final" as const,
+          savedAt: new Date().toISOString(),
+        };
+        onSave(updated);
+        return updated;
+      });
+
+      setIsSavedAlert(true);
+      setTimeout(() => setIsSavedAlert(false), 3000);
+    } catch (err) {
       console.error(err);
-      setErrorMessage(
-        err.message || "Terjadi kesalahan saat memproses masukan analisis."
-      );
     } finally {
       setIsLoadingAi(false);
     }
   };
 
-  const handleSaveDraft = (markFinal: boolean = false) => {
-    const updatedEntry: ReflectionEntry = {
+  const handleSaveDraft = () => {
+    const updated = {
       ...draft,
       savedAt: new Date().toISOString(),
-      status: markFinal ? "final" : "draft",
     };
-    onSave(updatedEntry);
-    setSuccessMessage(
-      markFinal
-        ? "Refleksi berhasil disimpan dengan status Siap Lapor!"
-        : "Draf refleksi berhasil disimpan!"
-    );
+    onSave(updated);
+    setIsSavedAlert(true);
+    setTimeout(() => setIsSavedAlert(false), 3000);
   };
 
-  const hasAnyNarrative =
-    Boolean(draft.assess.trim()) ||
-    Boolean(draft.design.trim()) ||
-    Boolean(draft.implement.trim()) ||
-    Boolean(draft.measure.trim());
+  // Iterasi TET: Make findings of this cycle the basis of Stage 1 for the next cycle
+  const handleStartNextIterativeCycle = () => {
+    if (onIterateNextCycle) {
+      onIterateNextCycle(draft);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {errorMessage && (
-        <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs sm:text-sm">
-          <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-600" />
-          <div>
-            <p className="font-semibold">Perhatian</p>
-            <p>{errorMessage}</p>
+      {/* 1. Ringkasan Pembuka Sesi (Opening Session Summary - Dokumen Halaman 4 Bagian 6) */}
+      {previousEntry && (
+        <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-md border border-indigo-700/50">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-indigo-300">
+                  Ringkasan Pembuka Sesi (Iterasi Siklus TET)
+                </span>
+              </div>
+              <h3 className="font-heading font-bold text-base sm:text-lg text-white">
+                Melanjutkan Rencana Perubahan dari Siklus {previousEntry.siklus}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Pada Siklus {previousEntry.siklus}, capaian ketuntasan murid berada di{" "}
+                <strong className="text-emerald-300">{previousEntry.persenTuntas}%</strong>. Rencana
+                perubahan yang Anda tetapkan:{" "}
+                <em className="text-amber-200">
+                  "{previousEntry.rencanaPerubahanBerikutnya || "Penyempurnaan lembar peran & panduan orang tua"}"
+                </em>
+                .
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/15 flex flex-col sm:flex-row items-center gap-3 shrink-0">
+              <span className="text-xs text-slate-200 font-medium">
+                Apakah sudah diuji di kelas?
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPreviousChangeTested("sudah")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    previousChangeTested === "sudah"
+                      ? "bg-emerald-500 text-white shadow-xs"
+                      : "bg-white/10 text-slate-300 hover:bg-white/20"
+                  }`}
+                >
+                  ✓ Sudah Dicoba
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviousChangeTested("belum")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    previousChangeTested === "belum"
+                      ? "bg-amber-500 text-white shadow-xs"
+                      : "bg-white/10 text-slate-300 hover:bg-white/20"
+                  }`}
+                >
+                  Belum Selesai
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {successMessage && (
-        <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs sm:text-sm">
-          <CheckCircle2 size={18} className="shrink-0 mt-0.5 text-emerald-600" />
-          <p className="font-medium">{successMessage}</p>
+      {/* Floating Toolbar: AI Facilitator, Peer Mode, STAR Export */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Chat Facilitator */}
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm shadow-indigo-100 cursor-pointer"
+          >
+            <Sparkles size={16} className="text-amber-300" />
+            <span>Fasilitator Inkuiri AI (Tanya-Jawab 1 Langkah)</span>
+          </button>
+
+          {/* Mode Sejawat */}
+          <button
+            onClick={() => setIsPeerOpen(true)}
+            className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl transition cursor-pointer"
+          >
+            <Users size={16} className="text-indigo-600" />
+            <span>Mode Sejawat (KKG/MGMP)</span>
+          </button>
+
+          {/* Ekspor STAR */}
+          <button
+            onClick={() => setIsStarOpen(true)}
+            className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl transition cursor-pointer"
+          >
+            <Award size={16} className="text-emerald-600" />
+            <span>Ekspor STAR (Praktik Baik)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowEvidencePanel(!showEvidencePanel)}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition cursor-pointer ${
+              showEvidencePanel
+                ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <FileSpreadsheet size={15} />
+            <span>{showEvidencePanel ? "Tutup Panel Bukti Data" : "6 Kategori Bukti Data"}</span>
+            {showEvidencePanel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+
+          <button
+            onClick={handleSaveDraft}
+            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer"
+          >
+            <Save size={15} />
+            <span>Simpan</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Cross-Cycle Comparison Card (if previous cycle exists) */}
+      {draft.aiFeedback?.perbandinganAntarSiklus && (
+        <CycleComparisonCard
+          comparison={draft.aiFeedback.perbandinganAntarSiklus}
+          currentCycle={draft.siklus}
+        />
+      )}
+
+      {/* Evidence Panel (6 Kategori Bukti Data - Dokumen Halaman 4 Bagian 5) */}
+      {showEvidencePanel && (
+        <div className="bg-slate-50/80 rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div>
+              <h4 className="font-heading font-bold text-sm text-slate-900">
+                Bukti Data Multi-Sumber (6 Kategori Sesuai Dokumen Acuan)
+              </h4>
+              <p className="text-xs text-slate-500">
+                Data bersifat sukarela. AI menggunakan bukti autentik ini dan tidak mengarang fakta.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
+              Tahap 1, 3, 4, 5
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            {/* 1. Hasil Belajar Murid */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="font-bold text-slate-800 block">
+                1. Hasil Belajar Murid (Tahap 1, 4)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Nilai asesmen formatif/sumatif, % ketuntasan, hasil produk (infografis).
+              </p>
+              <textarea
+                value={draft.buktiData?.hasilBelajar || ""}
+                onChange={(e) => handleBuktiChange("hasilBelajar", e.target.value)}
+                rows={2}
+                placeholder="Contoh: Formatif 1: 22 dari 32 murid tuntas (68.75%), draf infografis terkumpul 26..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            {/* 2. Keterlibatan Murid */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="font-bold text-slate-800 block">
+                2. Keterlibatan Murid (Tahap 1, 3, 4)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Catatan observasi kelas, partisipasi gim/layar, umpan balik & refleksi murid.
+              </p>
+              <textarea
+                value={draft.buktiData?.keterlibatanMurid || ""}
+                onChange={(e) => handleBuktiChange("keterlibatanMurid", e.target.value)}
+                rows={2}
+                placeholder="Contoh: Partisipasi menjawab gim Papan Interaktif mencapai 92%, keaktifan tanya jawab..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            {/* 3. Praktik Guru */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="font-bold text-slate-800 block">
+                3. Praktik Guru (Tahap 1, 3, 4)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Catatan mengajar, hasil supervisi atau peer observation, efisiensi transisi.
+              </p>
+              <textarea
+                value={draft.buktiData?.praktikGuru || ""}
+                onChange={(e) => handleBuktiChange("praktikGuru", e.target.value)}
+                rows={2}
+                placeholder="Contoh: Peer observation bersama rekan MGMP: waktu transisi dipangkas jadi 4 menit..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            {/* 4. Keterlibatan Orang Tua */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="font-bold text-slate-800 block">
+                4. Keterlibatan Orang Tua (Tahap 3, 4)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Jumlah dan kualitas dokumentasi bersama orang tua, kendala yang muncul.
+              </p>
+              <textarea
+                value={draft.buktiData?.keterlibatanOrangTua || ""}
+                onChange={(e) => handleBuktiChange("keterlibatanOrangTua", e.target.value)}
+                rows={2}
+                placeholder="Contoh: 30 dari 32 orang tua menandatangani konfirmasi tugas rumah di Google Classroom..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            {/* 5. Proses Digital */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="font-bold text-slate-800 block">
+                5. Proses Digital (Tahap 3, 4)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Tangkapan layar Google Classroom, jejak umpan balik, log Papan Interaktif.
+              </p>
+              <textarea
+                value={draft.buktiData?.prosesDigital || ""}
+                onChange={(e) => handleBuktiChange("prosesDigital", e.target.value)}
+                rows={2}
+                placeholder="Contoh: Log Classroom: 100% murid mengunduh modul sebelum jam pelajaran, 32 berkas..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            {/* 6. Umpan Balik Sejawat */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="font-bold text-slate-800 block">
+                6. Umpan Balik Sejawat (Tahap 1, 4, 5)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Masukan KKG/MGMP, rekan guru kejuruan, atau kepala sekolah.
+              </p>
+              <textarea
+                value={draft.buktiData?.umpanBalikSejawat || ""}
+                onChange={(e) => handleBuktiChange("umpanBalikSejawat", e.target.value)}
+                rows={2}
+                placeholder="Contoh: Masukan guru DKV: format infografis sebaiknya dipadukan dengan modul desain..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Identitas Siklus Mingguan */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">
-          <BookOpen className="text-indigo-600" size={18} />
-          <h3 className="font-heading font-bold text-slate-900 text-sm sm:text-base">
-            Identitas Siklus & Tujuan Pembelajaran (TP)
-          </h3>
+      {/* Form Section: Data Identitas & Kuantitatif Murid */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5">
+        <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="font-heading font-bold text-base text-slate-900">
+              Identitas Siklus & Rekap Data Kuantitatif Murid
+            </h3>
+            <p className="text-xs text-slate-500">
+              Konteks: {profile.sekolah} · {profile.mapel} ({profile.faseKelas})
+            </p>
+          </div>
+          <span className="text-xs font-mono font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 self-start sm:self-auto">
+            Siklus {draft.siklus} · Minggu ke-{draft.mingguKe}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Identitas Input */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Minggu ke-
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={draft.mingguKe}
-              onChange={(e) => handleUpdate("mingguKe", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Siklus Inkuiri ke-
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={draft.siklus}
-              onChange={(e) => handleUpdate("siklus", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Periode Pelaksanaan
-            </label>
-            <input
-              type="text"
-              value={draft.periode}
-              onChange={(e) => handleUpdate("periode", e.target.value)}
-              placeholder="mis. 08 - 12 September 2026"
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Rekan Kolaborasi / Tim MGMP
-            </label>
-            <input
-              type="text"
-              value={draft.rekan}
-              onChange={(e) => handleUpdate("rekan", e.target.value)}
-              placeholder="mis. MGMP Informatika Satuan Pendidikan"
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 transition"
-            />
-          </div>
-
-          <div className="sm:col-span-2 lg:col-span-4">
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Elemen & Tujuan Pembelajaran (TP) yang Direfleksikan
+            <label className="font-semibold text-slate-700 block mb-1">
+              Elemen / Materi TP:
             </label>
             <input
               type="text"
               value={draft.elemenTP}
-              onChange={(e) => handleUpdate("elemenTP", e.target.value)}
-              placeholder="mis. Algoritma & Pemrograman: Menganalisis dan Mengimplementasikan Struktur Kontrol Percabangan"
-              className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 transition"
+              onChange={(e) => handleChange("elemenTP", e.target.value)}
+              placeholder="Contoh: Berpikir Komputasional - Logika Percabangan"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition"
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">
+              Periode Siklus / Tanggal:
+            </label>
+            <input
+              type="text"
+              value={draft.periode}
+              onChange={(e) => handleChange("periode", e.target.value)}
+              placeholder="Contoh: 25 - 29 Agustus 2026"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition"
+            />
+          </div>
+          <div>
+            <label className="font-semibold text-slate-700 block mb-1">
+              Rekan Kolaborasi / MGMP:
+            </label>
+            <input
+              type="text"
+              value={draft.rekan}
+              onChange={(e) => handleChange("rekan", e.target.value)}
+              placeholder="Contoh: MGMP Informatika & Guru DKV"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition"
             />
           </div>
         </div>
-      </div>
 
-      {/* Ringkasan Data Kuantitatif Hasil Belajar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-4 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <Target className="text-indigo-600" size={18} />
-            <h3 className="font-heading font-bold text-slate-900 text-sm sm:text-base">
-              Data Kuantitatif Hasil Belajar & Asesmen Formatif
-            </h3>
-          </div>
-          <span className="text-[11px] text-slate-400">
-            Tolok ukur acuan AI dan visualisasi data grafik
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Jumlah Siswa
+        {/* Kuantitatif Data Grid (Gunakan istilah Murid) */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Jumlah Murid
             </label>
             <input
               type="number"
               value={draft.jumlahSiswa}
-              onChange={(e) => handleUpdate("jumlahSiswa", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 font-semibold"
+              onChange={(e) => handleChange("jumlahSiswa", Number(e.target.value))}
+              className="w-full font-bold text-base text-slate-900 bg-white px-2 py-1 border border-slate-200 rounded-lg text-center"
             />
+            <span className="text-[10px] text-slate-400 block text-center mt-1">Orang murid</span>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Rata-rata Nilai Akhir (NA)
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Batas KKTP
+            </label>
+            <input
+              type="number"
+              value={draft.kktp}
+              onChange={(e) => handleChange("kktp", Number(e.target.value))}
+              className="w-full font-bold text-base text-rose-600 bg-white px-2 py-1 border border-slate-200 rounded-lg text-center"
+            />
+            <span className="text-[10px] text-slate-400 block text-center mt-1">Standar minimal</span>
+          </div>
+
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Rata-rata Nilai (NA)
             </label>
             <input
               type="number"
               step="0.1"
               value={draft.rataNA}
-              onChange={(e) => handleUpdate("rataNA", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 font-semibold text-indigo-700"
+              onChange={(e) => handleChange("rataNA", Number(e.target.value))}
+              className="w-full font-bold text-base text-indigo-600 bg-white px-2 py-1 border border-slate-200 rounded-lg text-center"
             />
+            <span className="text-[10px] text-slate-400 block text-center mt-1">Skala 100</span>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Kriteria Ketuntasan (KKTP)
-            </label>
-            <input
-              type="number"
-              value={draft.kktp}
-              onChange={(e) => handleUpdate("kktp", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 font-semibold text-rose-600"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              % Ketuntasan Siswa
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              % Ketuntasan
             </label>
             <input
               type="number"
               step="0.1"
               value={draft.persenTuntas}
-              onChange={(e) => handleUpdate("persenTuntas", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 font-semibold text-indigo-600"
+              onChange={(e) => handleChange("persenTuntas", Number(e.target.value))}
+              className="w-full font-bold text-base text-emerald-600 bg-white px-2 py-1 border border-slate-200 rounded-lg text-center"
             />
+            <span className="text-[10px] text-slate-400 block text-center mt-1">Tuntas KKTP</span>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              % Keterlibatan Siswa
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 col-span-2 sm:col-span-1">
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              % Partisipasi Kelas
             </label>
             <input
               type="number"
               value={draft.keterlibatanRate}
-              onChange={(e) => handleUpdate("keterlibatanRate", Number(e.target.value))}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50 font-semibold text-emerald-600"
+              onChange={(e) => handleChange("keterlibatanRate", Number(e.target.value))}
+              className="w-full font-bold text-base text-amber-600 bg-white px-2 py-1 border border-slate-200 rounded-lg text-center"
             />
+            <span className="text-[10px] text-slate-400 block text-center mt-1">Keaktifan murid</span>
           </div>
+        </div>
 
-          <div className="col-span-2 sm:col-span-3 lg:col-span-5">
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Soal Formatif Kategori Sukar / Distraktor Utama
-            </label>
-            <input
-              type="text"
-              value={draft.soalSukar}
-              onChange={(e) => handleUpdate("soalSukar", e.target.value)}
-              placeholder="mis. Soal 4 (Studi Kasus Penentuan Base Case Rekursi & Nested Loop)"
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none bg-slate-50"
-            />
-          </div>
+        {/* Soal Sukar / Miskonsepsi */}
+        <div>
+          <label className="text-xs font-semibold text-slate-700 block mb-1">
+            Soal Formatif Kategori Sukar / Miskonsepsi Utama yang Ditemukan:
+          </label>
+          <input
+            type="text"
+            value={draft.soalSukar}
+            onChange={(e) => handleChange("soalSukar", e.target.value)}
+            placeholder="Contoh: Soal 3 (Pola Kondisi Majemuk AND/OR pada Skema Warna)"
+            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition"
+          />
         </div>
       </div>
 
-      {/* Rubrik Evaluasi Mandiri Guru */}
-      <SelfRubricInput
-        scores={draft.selfRubricScores}
-        onChange={handleRubricChange}
-      />
-
-      {/* 4 Tahap Inkuiri Kolaboratif */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Compass className="text-indigo-600" size={20} />
-            <h3 className="font-heading font-bold text-slate-900 text-sm sm:text-base">
-              Catatan 4 Tahap Inkuiri Kolaboratif Guru
-            </h3>
-          </div>
-          <span className="text-xs text-slate-400">
-            Model Terstandar: Assess · Design · Implement · Measure
-          </span>
+      {/* 2. Lima Tahap Siklus TET & Inkuiri Kolaboratif (Tabbed Navigation) */}
+      <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs">
+        {/* Tab Header for 5 Stages */}
+        <div className="bg-slate-100 p-2 border-b border-slate-200 flex overflow-x-auto gap-1.5 no-scrollbar">
+          {TET_STAGES.map((st) => (
+            <button
+              key={st.nomor}
+              onClick={() => setActiveTabTahap(st.nomor)}
+              type="button"
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                activeTabTahap === st.nomor
+                  ? "bg-white text-indigo-700 shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  activeTabTahap === st.nomor
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {st.nomor}
+              </span>
+              <span>
+                {st.tahapTET} ({st.tahapInkuiri})
+              </span>
+              {draft[st.key] && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              )}
+            </button>
+          ))}
         </div>
 
-        {INQUIRY_STAGES.map((stage) => {
-          return (
-            <div
-              key={stage.key}
-              className={`bg-white rounded-2xl border border-slate-200 border-l-4 ${stage.borderColor} p-5 shadow-sm transition`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+        {/* Tab Body for Active Stage */}
+        {TET_STAGES.filter((st) => st.nomor === activeTabTahap).map((st) => (
+          <div key={st.nomor} className="p-5 sm:p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${stage.badgeColor}`}
-                  >
-                    Tahap {stage.kode}
+                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${st.badgeColor}`}>
+                    Tahap {st.nomor} · {st.tahapTET} ({st.tahapInkuiri})
                   </span>
-                  <h4 className={`font-heading font-bold text-sm sm:text-base ${stage.headerColor}`}>
-                    {stage.judul} <span className="font-normal text-xs text-slate-500">({stage.sub})</span>
-                  </h4>
+                  <span className="text-xs text-slate-500">
+                    Fokus: {st.tujuan}
+                  </span>
                 </div>
+                <p className="text-xs font-semibold text-slate-700 mt-1">
+                  Keluaran Tahap: <span className="text-indigo-600 font-bold">{st.keluaran}</span>
+                </p>
               </div>
+            </div>
 
-              {/* Guiding Questions */}
-              <ul className="text-xs text-slate-500 space-y-1 mb-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                {stage.pertanyaan.map((q, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-slate-400 font-bold">•</span>
-                    <span>{q}</span>
+            {/* Pertanyaan Pemandu Dokumen Acuan */}
+            <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/80 space-y-2">
+              <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider block">
+                Pertanyaan Pemandu Fasilitator (Pilih yang relevan):
+              </span>
+              <ul className="space-y-1 text-xs text-indigo-950/80 list-disc list-inside">
+                {st.pertanyaanPemandu.map((q, idx) => (
+                  <li key={idx} className="leading-relaxed">
+                    {q}
                   </li>
                 ))}
               </ul>
+            </div>
 
+            {/* Narasi Catatan Guru */}
+            <div>
+              <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                Catatan Refleksi Guru untuk {st.tahapTET} ({st.tahapInkuiri}):
+              </label>
               <textarea
-                rows={4}
-                value={draft[stage.key]}
-                onChange={(e) => handleUpdate(stage.key, e.target.value)}
-                placeholder={stage.placeholder}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white leading-relaxed resize-y"
+                value={draft[st.key] || ""}
+                onChange={(e) => handleChange(st.key, e.target.value)}
+                rows={6}
+                placeholder={st.placeholder}
+                className="w-full text-xs sm:text-sm p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition leading-relaxed text-slate-800"
               />
             </div>
-          );
-        })}
+
+            {/* Khusus Tahap 4: Tambahan Kolom Rencana Perubahan Siklus Berikutnya */}
+            {st.nomor === 4 && (
+              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200 space-y-3">
+                <span className="font-bold text-xs text-emerald-900 uppercase tracking-wide block">
+                  Iterasi Siklus Lanjutan (TET):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="font-semibold text-emerald-950 block mb-1">
+                      Perubahan spesifik yang akan dicoba pada siklus berikutnya:
+                    </label>
+                    <textarea
+                      value={draft.rencanaPerubahanBerikutnya || ""}
+                      onChange={(e) => handleChange("rencanaPerubahanBerikutnya", e.target.value)}
+                      rows={2}
+                      placeholder="Contoh: Menambahkan visualisasi pohon keputusan (decision tree) dan tugas bertingkat..."
+                      className="w-full p-2.5 bg-white border border-emerald-300 rounded-xl focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold text-emerald-950 block mb-1">
+                      Indikator apa yang akan dipantau:
+                    </label>
+                    <textarea
+                      value={draft.indikatorPemantauan || ""}
+                      onChange={(e) => handleChange("indikatorPemantauan", e.target.value)}
+                      rows={2}
+                      placeholder="Contoh: Ketuntasan kelompok bimbingan >80% dan durasi pengerjaan mandiri..."
+                      className="w-full p-2.5 bg-white border border-emerald-300 rounded-xl focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Navigation between stages */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                disabled={activeTabTahap === 1}
+                onClick={() => setActiveTabTahap((prev) => Math.max(1, prev - 1))}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 disabled:opacity-30 transition cursor-pointer"
+              >
+                ← Tahap Sebelumnya
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  className="px-3.5 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition cursor-pointer"
+                >
+                  Simpan Draf
+                </button>
+                {activeTabTahap < 5 ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTabTahap((prev) => Math.min(5, prev + 1))}
+                    className="px-4 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Lanjut Tahap {activeTabTahap + 1}</span>
+                    <ArrowRight size={13} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAnalyzeWithAi}
+                    className="px-4 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1"
+                  >
+                    <Sparkles size={13} />
+                    <span>Selesaikan & Analisis AI</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Action Toolbar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={requestAiAnalysis}
-            disabled={isLoadingAi || !hasAnyNarrative}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 transition shadow-lg shadow-indigo-100"
-            id="btn-minta-acuan-ai"
-          >
-            {isLoadingAi ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Sparkles size={16} className="text-indigo-200" />
-            )}
-            <span>
-              {isLoadingAi
-                ? "Memproses Analisis & Acuan AI..."
-                : "Minta Masukan & Acuan Terstandar AI"}
-            </span>
-          </button>
+      {/* 3. Evaluasi Mandiri Guru (Skala Rubrik 1 - 4) */}
+      <SelfRubricInput
+        scores={draft.selfRubricScores}
+        onChange={handleSelfScoresChange}
+      />
 
-          <button
-            type="button"
-            onClick={() => handleSaveDraft(false)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition"
-          >
-            <Save size={15} />
-            <span>Simpan Draf</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSaveDraft(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition"
-          >
-            <FileCheck size={15} />
-            <span>Simpan & Siap Lapor</span>
-          </button>
+      {/* Action Bar: Trigger AI Analysis & Reports */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+        <div className="space-y-0.5">
+          <h4 className="font-heading font-bold text-sm text-slate-900">
+            Sintesis Refleksi & Validasi Standar Siklus TET
+          </h4>
+          <p className="text-xs text-slate-500">
+            Memvalidasi 5 tahap siklus, memeriksa bukti data, dan menghasilkan laporan format A-H
+          </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onViewReport(draft)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition"
-        >
-          <BookOpen size={15} />
-          <span>Lihat Format Laporan Mingguan</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {onIterateNextCycle && (
+            <button
+              onClick={handleStartNextIterativeCycle}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold text-xs sm:text-sm rounded-xl border border-purple-200 transition cursor-pointer"
+              title="Jadikan temuan siklus ini sebagai Tahap 1 siklus berikutnya (Iterasi TET)"
+            >
+              <GitCompare size={15} />
+              <span>Jadikan Bahan Siklus Baru (Iterasi)</span>
+            </button>
+          )}
+
+          <button
+            onClick={handleAnalyzeWithAi}
+            disabled={isLoadingAi}
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-100 transition cursor-pointer"
+          >
+            {isLoadingAi ? (
+              <Loader2 size={16} className="animate-spin text-white" />
+            ) : (
+              <Sparkles size={16} className="text-amber-300" />
+            )}
+            <span>{isLoadingAi ? "Menganalisis Bukti..." : "Analisis Siklus TET (AI)"}</span>
+          </button>
+
+          <button
+            onClick={() => onViewReport(draft)}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm rounded-xl transition cursor-pointer"
+          >
+            <BookOpen size={15} />
+            <span>Format Laporan A-H</span>
+          </button>
+        </div>
       </div>
 
-      {/* AI Structured Reference Panel */}
+      {/* 4. Tampilan Hasil Analisis AI & Pemeriksa Bukti */}
       {draft.aiFeedback && (
-        <div className="space-y-6">
-          {/* Main AI Spotlight Card */}
-          <div className="bg-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 border border-indigo-900/60">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/25 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-bold shrink-0">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-white text-base sm:text-lg">
-                    Wawasan & Acuan Terstandar AI
-                  </h3>
-                  <p className="text-xs text-indigo-300">
-                    {draft.aiFeedback.acuanStandar}
-                  </p>
-                </div>
+        <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-5 animate-in fade-in duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h3 className="font-heading font-bold text-base text-slate-900">
+                  Ulasan Fasilitator Inkuiri & Bukti Terstandar
+                </h3>
               </div>
-
-              <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="text-xs text-indigo-300">
-                  Skor Validasi AI:
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white border border-white/20">
-                  {calculateAverageRubric(draft.aiFeedback.skorValidasiAi).toFixed(2)}{" "}
-                  / 4.0
-                </span>
-              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Rujukan Acuan: <strong className="text-indigo-600">{draft.aiFeedback.acuanStandar}</strong>
+              </p>
             </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsStarOpen(true)}
+                className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+              >
+                <Award size={13} />
+                <span>Lihat STAR</span>
+              </button>
+              <button
+                onClick={() => setIsPeerOpen(true)}
+                className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition"
+              >
+                <Users size={13} />
+                <span>Format Forum</span>
+              </button>
+            </div>
+          </div>
 
-            {/* Diagnostic Summary */}
-            <div className="bg-white/10 p-5 rounded-2xl border border-white/10 text-xs sm:text-sm text-indigo-100 leading-relaxed">
-              <span className="font-bold text-white block mb-1 text-xs uppercase tracking-wider text-indigo-300">
-                Ringkasan Diagnostik Siklus
-              </span>
+          {/* Diagnostik Objektif */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <span className="font-bold text-xs text-indigo-900 block mb-1 uppercase tracking-wide">
+              Ringkasan Diagnostik Fasilitator:
+            </span>
+            <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
               {draft.aiFeedback.ringkasanDiagnostik}
-            </div>
+            </p>
           </div>
 
-          {/* Detailed Stage-by-Stage Analysis Cards */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h4 className="font-heading font-bold text-slate-900 text-sm sm:text-base">
-                Analisis Kematangan Inkuiri per Tahap
-              </h4>
-              <span className="text-xs text-slate-400">
-                Standar Kompetensi Pedagogik Guru
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              {INQUIRY_STAGES.map((s) => {
-                const stageData = draft.aiFeedback?.stages[s.key];
-                if (!stageData) return null;
-
-                return (
+          {/* Pemeriksa Bukti (Evidence Checker - Dokumen Halaman 4 Bagian 6) */}
+          {draft.aiFeedback.periksaBukti && draft.aiFeedback.periksaBukti.length > 0 && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2.5">
+              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
+                <AlertCircle size={16} className="text-amber-600" />
+                <span>Pemeriksa Bukti: Catatan Pernyataan yang Memerlukan Data Tambahan</span>
+              </div>
+              <div className="space-y-2">
+                {draft.aiFeedback.periksaBukti.map((pb, idx) => (
                   <div
-                    key={s.key}
-                    className={`p-5 rounded-2xl border border-slate-200 border-l-4 ${s.borderColor} bg-slate-50/50 space-y-2.5`}
+                    key={idx}
+                    className="p-3 bg-white/90 rounded-xl border border-amber-200 text-xs text-slate-800 space-y-1"
                   >
-                    <div className="flex items-center justify-between">
-                      <p className={`font-bold text-xs sm:text-sm ${s.headerColor}`}>
-                        Tahap {s.kode}. {s.judul} <span className="text-slate-500 font-normal">({s.sub})</span>
-                      </p>
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200 shadow-2xs">
-                        Tingkat: {stageData.tingkatKematangan}
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-100 text-amber-800 border border-amber-300">
+                        [Perlu Bukti]
                       </span>
+                      <span className="font-semibold text-slate-900">{pb.klaim}</span>
                     </div>
-
-                    {stageData.kekuatan && (
-                      <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700">
-                        <ThumbsUp size={15} className="shrink-0 mt-0.5 text-emerald-600" />
-                        <div>
-                          <span className="font-semibold text-slate-900">Kekuatan: </span>
-                          <span>{stageData.kekuatan}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {stageData.masukan && (
-                      <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700">
-                        <Lightbulb size={15} className="shrink-0 mt-0.5 text-indigo-600" />
-                        <div>
-                          <span className="font-semibold text-slate-900">Masukan Perbaikan: </span>
-                          <span>{stageData.masukan}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {stageData.pertanyaan_lanjutan && (
-                      <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-600 italic bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                        <MessageCircleQuestion size={15} className="shrink-0 mt-0.5 text-indigo-600 not-italic" />
-                        <div>
-                          <span className="font-semibold text-indigo-700 not-italic">
-                            Pertanyaan Reflektif:{" "}
-                          </span>
-                          <span>"{stageData.pertanyaan_lanjutan}"</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {stageData.indikatorAcuan && (
-                      <p className="text-[11px] text-slate-400 font-medium pt-1.5 border-t border-slate-200">
-                        Rujukan Indikator: {stageData.indikatorAcuan}
-                      </p>
-                    )}
+                    <p className="text-[11px] text-slate-600 pl-1">
+                      💡 <strong>Saran Data:</strong> {pb.saranData} ({pb.kategori})
+                    </p>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
+          )}
 
-            {/* Differentiated Instruction Recommendations */}
-            {draft.aiFeedback.rekomendasiDiferensiasi && (
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 mt-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
-                  <h4 className="font-heading font-bold text-slate-900 text-xs sm:text-sm">
-                    Rekomendasi Diferensiasi Belajar Berdasarkan Data
-                  </h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-                    <span className="font-bold text-rose-600 block mb-1">
-                      Kelompok Intervensi (&lt; KKTP)
-                    </span>
-                    <p className="text-slate-600 leading-relaxed">
-                      {draft.aiFeedback.rekomendasiDiferensiasi.intervensiTertinggal}
-                    </p>
-                  </div>
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-                    <span className="font-bold text-indigo-600 block mb-1">
-                      Kelompok Reguler (Tuntas)
-                    </span>
-                    <p className="text-slate-600 leading-relaxed">
-                      {draft.aiFeedback.rekomendasiDiferensiasi.penguatanReguler}
-                    </p>
-                  </div>
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-                    <span className="font-bold text-emerald-600 block mb-1">
-                      Kelompok Pengayaan (Tinggi)
-                    </span>
-                    <p className="text-slate-600 leading-relaxed">
-                      {draft.aiFeedback.rekomendasiDiferensiasi.pengayaanTinggi}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Rekomendasi Utama */}
+          {draft.aiFeedback.rekomendasi_utama && (
+            <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-2">
+              <span className="font-bold text-xs text-indigo-900 uppercase tracking-wide block">
+                Rekomendasi Tindak Lanjut Terstruktur:
+              </span>
+              <ul className="space-y-1.5 text-xs text-slate-800 list-disc list-inside">
+                {draft.aiFeedback.rekomendasi_utama.map((rec, i) => (
+                  <li key={i} className="leading-relaxed">
+                    {rec}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
-            {/* Rekomendasi Utama */}
-            {draft.aiFeedback.rekomendasi_utama && (
-              <div className="bg-indigo-50/60 p-5 rounded-2xl border border-indigo-100">
-                <h4 className="font-heading font-bold text-indigo-950 text-xs sm:text-sm mb-3">
-                  Rekomendasi Prioritas untuk Siklus Berikutnya
-                </h4>
-                <ul className="space-y-2 text-xs sm:text-sm text-slate-700">
-                  {draft.aiFeedback.rekomendasi_utama.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                        {i + 1}
-                      </span>
-                      <span className="leading-relaxed">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+      {/* Floating Modals */}
+      <AiFacilitatorChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        profile={profile}
+        currentDraft={draft}
+        onApplyUpdates={(updates) => setDraft((prev) => ({ ...prev, ...updates }))}
+      />
+
+      <StarExportModal
+        isOpen={isStarOpen}
+        onClose={() => setIsStarOpen(false)}
+        starData={draft.aiFeedback?.praktikBaikSTAR}
+        profile={profile}
+        siklus={draft.siklus}
+      />
+
+      <PeerModeModal
+        isOpen={isPeerOpen}
+        onClose={() => setIsPeerOpen(false)}
+        modeSejawatData={draft.aiFeedback?.modeSejawat}
+        profile={profile}
+        siklus={draft.siklus}
+        onSaveFeedbackNote={(note) => handleBuktiChange("umpanBalikSejawat", note)}
+      />
+
+      {/* Saved Toast */}
+      {isSavedAlert && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-950 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom-5">
+          <CheckCircle2 size={16} className="text-emerald-400" />
+          <span>Refleksi siklus berhasil disimpan!</span>
         </div>
       )}
     </div>

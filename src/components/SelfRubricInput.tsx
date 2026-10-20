@@ -73,6 +73,16 @@ export const SelfRubricInput: React.FC<SelfRubricInputProps> = ({ scores, onChan
     });
   };
 
+  const handleSetAllProficient = () => {
+    onChange({
+      penguasaanMateri: 3,
+      diferensiasi: 3,
+      interaktivitas: 3,
+      asesmenData: 3,
+      tindakLanjut: 3,
+    });
+  };
+
   const averageScore = calculateAverageRubric(scores).toFixed(2);
 
   const getBadgeClass = (score: number) => {
@@ -83,70 +93,80 @@ export const SelfRubricInput: React.FC<SelfRubricInputProps> = ({ scores, onChan
   };
 
   const getPredikatText = (avg: number) => {
-    if (avg >= 3.6) return "Mahir (Exemplary)";
-    if (avg >= 3.0) return "Cakap (Proficient)";
-    if (avg >= 2.0) return "Berkembang (Developing)";
-    return "Perlu Pendampingan (Needs Support)";
+    if (avg >= 3.6) return "Mahir";
+    if (avg >= 3.0) return "Cakap";
+    if (avg >= 2.0) return "Berkembang";
+    return "Perlu Bimbingan";
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <Award className="text-indigo-600" size={20} />
-            <h3 className="font-heading font-bold text-base text-slate-900">
-              Rubrik Evaluasi Mandiri Guru (Skala 1 - 4)
-            </h3>
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <Award size={18} />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-sm sm:text-base text-slate-900">
+                Evaluasi Mandiri Guru (Skala 1 - 4)
+              </h3>
+              <p className="text-[11px] sm:text-xs text-slate-500">
+                Refleksi jujur atas proses pembelajaran dan inkuiri kolaboratif di kelas
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Refleksi jujur atas praktik pembelajaran yang telah berlangsung sebagai basis perbandingan dengan Analisis AI.
-          </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl shrink-0">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-              Rata-rata Mandiri
+        <div className="flex items-center justify-between sm:justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={handleSetAllProficient}
+            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50/80 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition cursor-pointer border border-indigo-200/60"
+            title="Isi otomatis semua dimensi dengan skor 3 (Cakap)"
+          >
+            ⚡ Set Semua Cakap (Skor 3)
+          </button>
+
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shrink-0">
+            <span className="text-xs font-bold text-indigo-700">
+              {averageScore} <span className="text-[10px] text-slate-400">/ 4.0</span>
             </span>
-            <span className="text-sm font-bold text-indigo-600">
-              {averageScore} / 4.0
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getBadgeClass(
+                Number(averageScore)
+              )}`}
+            >
+              {getPredikatText(Number(averageScore))}
             </span>
           </div>
-          <span
-            className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${getBadgeClass(
-              Number(averageScore)
-            )}`}
-          >
-            {getPredikatText(Number(averageScore))}
-          </span>
         </div>
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 space-y-3.5">
         {RUBRIC_DIMENSIONS.map((dim) => {
           const currentScore = scores[dim.key] || 3;
+          const activeLevel = dim.levels.find((l) => l.score === Math.round(currentScore)) || dim.levels[2];
+
           return (
             <div
               key={dim.key}
-              className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition"
+              className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 bg-slate-50/60 hover:bg-slate-50 transition space-y-2.5"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+              <div className="flex items-start justify-between gap-2">
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold text-slate-800">
                     {dim.title}
                   </h4>
-                  <p className="text-[11px] text-slate-500">{dim.subtitle}</p>
+                  <p className="text-[11px] text-slate-500 hidden sm:block">{dim.subtitle}</p>
                 </div>
-                <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white text-indigo-600 border border-slate-200 shadow-2xs">
-                    Skor: {currentScore}
-                  </span>
-                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0">
+                  Skor {currentScore} · {activeLevel.label}
+                </span>
               </div>
 
-              {/* 4 Levels Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 mt-2.5">
+              {/* Touch-Friendly Segmented Buttons (1-4) for Mobile & Desktop */}
+              <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-200/70 rounded-xl">
                 {dim.levels.map((lvl) => {
                   const isSelected = Math.round(currentScore) === lvl.score;
                   return (
@@ -154,30 +174,27 @@ export const SelfRubricInput: React.FC<SelfRubricInputProps> = ({ scores, onChan
                       type="button"
                       key={lvl.score}
                       onClick={() => handleScoreSelect(dim.key, lvl.score)}
-                      className={`text-left p-3 rounded-xl border transition text-xs flex flex-col justify-between ${
+                      className={`min-h-[42px] sm:min-h-[40px] px-2 py-1.5 rounded-lg text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
                         isSelected
-                          ? "bg-indigo-600 text-white border-indigo-700 shadow-sm ring-2 ring-indigo-500/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/20"
+                          ? "bg-indigo-600 text-white shadow-xs"
+                          : "bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900"
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center justify-between font-bold mb-1">
-                          <span>
-                            {lvl.score}. {lvl.label}
-                          </span>
-                          {isSelected && <Check size={14} className="text-indigo-200" />}
-                        </div>
-                        <p
-                          className={`text-[11px] leading-relaxed ${
-                            isSelected ? "text-indigo-100" : "text-slate-500"
-                          }`}
-                        >
-                          {lvl.desc}
-                        </p>
-                      </div>
+                      <span className="text-xs sm:text-sm font-extrabold">{lvl.score}</span>
+                      <span className="text-[10px] sm:text-xs truncate max-w-full">
+                        {lvl.label.split(" ")[0]}
+                      </span>
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Active description callout */}
+              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-[11px] sm:text-xs text-slate-600 leading-relaxed flex items-start gap-2">
+                <span className="font-bold text-indigo-600 shrink-0">
+                  Tingkat {activeLevel.score} ({activeLevel.label}):
+                </span>
+                <span>{activeLevel.desc}</span>
               </div>
             </div>
           );

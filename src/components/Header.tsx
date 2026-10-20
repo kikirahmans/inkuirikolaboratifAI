@@ -1,6 +1,7 @@
 import React from "react";
 import { Sparkles, User, School, BookOpen, Download, Upload, Plus } from "lucide-react";
 import { TeacherProfile } from "../types";
+import { AppLogo } from "./AppLogo";
 
 interface HeaderProps {
   profile: TeacherProfile;
@@ -50,13 +51,8 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Logo & App Title */}
-          <div className="flex items-center gap-3.5">
-            <img
-              src="./logo.jpg"
-              alt="Logo RefleksiGuru Kikybahsoan"
-              className="h-12 sm:h-14 w-auto object-contain rounded-lg border border-slate-200/80 shadow-xs bg-white shrink-0 p-0.5"
-              referrerPolicy="no-referrer"
-            />
+          <div className="flex items-center gap-3">
+            <AppLogo size="md" />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-slate-900">
@@ -137,8 +133,8 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="border-t border-slate-100 bg-white">
+      {/* Desktop Tabs Navigation (Hidden on Mobile) */}
+      <div className="border-t border-slate-100 bg-white hidden sm:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto no-scrollbar gap-1.5 py-1.5">
           {[
             { id: "tulis", label: "Dashboard Refleksi", icon: BookOpen },
@@ -153,9 +149,9 @@ export const Header: React.FC<HeaderProps> = ({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 id={`tab-${tab.id}`}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm rounded-xl font-medium whitespace-nowrap transition ${
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm rounded-xl font-medium whitespace-nowrap transition cursor-pointer ${
                   isActive
-                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    ? "bg-indigo-50 text-indigo-700 font-bold"
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                 }`}
               >
@@ -166,6 +162,48 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </div>
       </div>
+
+      {/* Mobile Sticky Bottom Navigation Bar for Teachers on HP */}
+      <nav
+        aria-label="Navigasi Utama Mobile"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-2 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)] no-print"
+      >
+        {[
+          { id: "tulis", label: "Refleksi", icon: BookOpen },
+          { id: "evaluasi", label: "Grafik", icon: Sparkles },
+          { id: "laporan", label: "Laporan", icon: School },
+          { id: "riwayat", label: `Riwayat (${historyCount})`, icon: User },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              type="button"
+              className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition cursor-pointer min-h-[48px] ${
+                isActive
+                  ? "text-indigo-600 font-bold"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <div
+                className={`w-7 h-7 rounded-xl flex items-center justify-center transition ${
+                  isActive ? "bg-indigo-50 text-indigo-600 shadow-2xs" : "text-slate-400"
+                }`}
+              >
+                <Icon size={18} />
+              </div>
+              <span className="text-[10px] mt-0.5 tracking-tight font-medium">
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
     </header>
   );
 };

@@ -23,6 +23,7 @@ import {
   WeeklySynthesisReport,
 } from "../types";
 import { buildFallbackWeeklySynthesis } from "../utils/fallbackAnalyzer";
+import { AppLogo } from "./AppLogo";
 
 interface WeeklyReportViewProps {
   entries: ReflectionEntry[];
@@ -261,12 +262,9 @@ NIP: ${profile.nip || "-"}
         {/* Official Kop Laporan */}
         <div className="border-b-2 border-slate-900 pb-4 mb-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <img
-              src="./logo.jpg"
-              alt="Logo RefleksiGuru Kikybahsoan"
-              className="h-16 sm:h-20 w-auto object-contain shrink-0"
-              referrerPolicy="no-referrer"
-            />
+            <div className="shrink-0 flex items-center justify-center">
+              <AppLogo size="lg" />
+            </div>
             <div className="flex-1 text-center">
               <p className="text-xs uppercase tracking-widest font-bold text-slate-600">
                 Kementerian Pendidikan Dasar dan Menengah · Satuan Pendidikan Vokasi
